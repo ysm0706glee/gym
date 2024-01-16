@@ -1,11 +1,15 @@
-import { useLoaderData, Link, useNavigate } from "@remix-run/react";
+import { Button, PasswordInput, TextInput } from "@mantine/core";
+import { Link, useLoaderData, useNavigate } from "@remix-run/react";
 import { createBrowserClient } from "@supabase/ssr";
-import { TextInput, PasswordInput, Button } from "@mantine/core";
 
 export function loader() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
+    throw new Error(
+      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
+    );
   const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL!,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
   };
   return { env };
 }
@@ -20,7 +24,7 @@ export default function Login() {
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `http://localhost:3000/auth/callback`,
+          redirectTo: "http://localhost:3000/auth/callback",
         },
       });
     } catch (error) {

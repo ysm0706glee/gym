@@ -1,12 +1,16 @@
+import { Button, PasswordInput, TextInput } from "@mantine/core";
 import { useLoaderData } from "@remix-run/react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useState } from "react";
-import { TextInput, PasswordInput, Button } from "@mantine/core";
 
 export function loader() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
+    throw new Error(
+      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
+    );
   const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL!,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
   };
   return { env };
 }
