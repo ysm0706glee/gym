@@ -1,7 +1,9 @@
 // Import styles of packages that you've installed.
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 
+import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { cssBundleHref } from "@remix-run/css-bundle";
 import {
   Links,
@@ -13,7 +15,6 @@ import {
 } from "@remix-run/react";
 import { Analytics } from "@vercel/analytics/react";
 import type { LinksFunction } from "@vercel/remix";
-import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 
 export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
