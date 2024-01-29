@@ -1,6 +1,5 @@
 import { Button, NumberInput, Radio, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { type LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import {
   createBrowserClient,
@@ -8,6 +7,7 @@ import {
   parse,
   serialize,
 } from "@supabase/ssr";
+import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
 import { useEffect, useState } from "react";
 import type { Database } from "~/types/supabase";
 import type { WorkoutRecords } from "~/types/workoutRecord";

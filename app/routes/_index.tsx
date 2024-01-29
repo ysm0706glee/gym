@@ -1,5 +1,5 @@
-import { type LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
+import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
