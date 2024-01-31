@@ -6,4 +6,5 @@ export default {
   // publicPath: "/build/",
   // serverBuildPath: "build/index.js",
   postcss: true,
+  serverBuildTarget: "cjs",
 };
