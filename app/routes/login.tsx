@@ -20,6 +20,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   const isLocal = process.env.NODE_ENV === "development";
+  console.log("isLocal: ", isLocal);
 
   const loginWithGoogle = async () => {
     try {
