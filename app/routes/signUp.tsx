@@ -18,7 +18,6 @@ export function loader() {
 export default function SignUp() {
   const { env } = useLoaderData<typeof loader>();
   const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
-  const isLocal = process.env.NODE_ENV === "development";
 
   const [isSingedUp, setIsSignedUp] = useState(false);
 
@@ -31,14 +30,11 @@ export default function SignUp() {
         email,
         password,
         options: {
-          emailRedirectTo: isLocal
-            ? "http://localhost:3000/login"
-            : "https://gym-juzbro3fa-ysm0706glee.vercel.app/login",
+          emailRedirectTo: "/login",
         },
       });
       if (error) throw error;
-      console.log(data);
-      //
+      // TODO: handle data
       setIsSignedUp(true);
     } catch (error) {
       // TODO: handle error
@@ -56,7 +52,7 @@ export default function SignUp() {
           name="email"
         />
         <PasswordInput label="password" name="password" />
-        <Button type="submit">Login</Button>
+        <Button type="submit">Sign Up</Button>
       </form>
       {isSingedUp && <p>Check your email for a verification link</p>}
     </div>
