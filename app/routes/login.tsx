@@ -19,12 +19,16 @@ export default function Login() {
   const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
   const navigate = useNavigate();
 
+  const isLocal = process.env.NODE_ENV === "development";
+
   const loginWithGoogle = async () => {
     try {
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "/auth/callback",
+          redirectTo: isLocal
+            ? "http://localhost:3000/auth/callback"
+            : "https://gym-2cr4p8elw-ysm0706glee.vercel.app/auth/callback",
         },
       });
     } catch (error) {
