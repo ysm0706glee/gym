@@ -17,10 +17,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Error(
       "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
     );
+  const isLocal = process.env.NODE_ENV === "development";
   const url = new URL(request.url);
   const date = url.searchParams.get("date");
   if (!date) {
-    return redirect("/calendar");
+    return redirect(
+      isLocal
+        ? "http://localhost:3000/calendar"
+        : "https://gym-ysm0706glee.vercel.app/calendar"
+    );
   }
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL,

@@ -19,6 +19,8 @@ export default function SignUp() {
   const { env } = useLoaderData<typeof loader>();
   const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 
+  const isLocal = process.env.NODE_ENV === "development";
+
   const [isSingedUp, setIsSignedUp] = useState(false);
 
   const signUp = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -30,7 +32,9 @@ export default function SignUp() {
         email,
         password,
         options: {
-          emailRedirectTo: "/login",
+          emailRedirectTo: isLocal
+            ? "http://localhost:3000/login"
+            : "https://gym-ysm0706glee.vercel.app/login",
         },
       });
       if (error) throw error;
