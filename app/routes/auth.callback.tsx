@@ -6,6 +6,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Error(
       "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
     );
+  const isLocal = process.env.NODE_ENV === "development";
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const headers = new Headers();
@@ -30,8 +31,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
     );
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return redirect("/", { headers });
+      return redirect(
+        isLocal
+          ? "http://localhost:3000"
+          : "https://gym-ysm0706glee.vercel.app",
+        { headers }
+      );
     }
   }
-  return redirect("/login", { headers });
+  return redirect(
+    isLocal
+      ? "http://localhost:3000/login"
+      : "https://gym-ysm0706glee.vercel.app/login",
+    { headers }
+  );
 }

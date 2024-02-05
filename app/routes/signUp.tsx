@@ -34,7 +34,7 @@ export default function SignUp() {
         options: {
           emailRedirectTo: isLocal
             ? "http://localhost:3000/login"
-            : "https://gym-2cr4p8elw-ysm0706glee.vercel.app/login",
+            : "https://gym-ysm0706glee.vercel.app/login",
         },
       });
       if (error) throw error;

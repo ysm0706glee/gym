@@ -28,7 +28,7 @@ export default function Login() {
         options: {
           redirectTo: isLocal
             ? "http://localhost:3000/auth/callback"
-            : "https://gym-2cr4p8elw-ysm0706glee.vercel.app/auth/callback",
+            : "https://gym-ysm0706glee.vercel.app/auth/callback",
         },
       });
     } catch (error) {
