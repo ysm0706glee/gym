@@ -13,6 +13,7 @@
     "check": "biome check --apply ."
   },
   "dependencies": {
+    "@mantine/charts": "^7.5.2",
     "@mantine/core": "^7.4.1",
     "@mantine/dates": "^7.4.1",
     "@mantine/form": "^7.4.1",
@@ -28,7 +29,8 @@
     "dayjs": "^1.11.10",
     "isbot": "^3.6.8",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "recharts": "2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.5.1",
