@@ -87,6 +87,38 @@ export default function WorkoutMenus() {
             .eq("date", date)
             .order("exercises_id", { ascending: true });
         if (workoutRecordsError) throw workoutRecordsError;
+        // if there is no workout records, create new records with default values
+        if (!workoutRecordsData.length) {
+          const { data: workoutMenuData, error: workoutMenuError } =
+            await supabase
+              .from("workout_menus_exercises")
+              .select("exercises (id, name)")
+              .eq("workout_menus_id", workoutMenuId);
+          if (workoutMenuError) throw workoutMenuError;
+          console.log("workoutMenuData", workoutMenuData);
+          const result: WorkoutRecords = {};
+          for (const workoutMenu of workoutMenuData) {
+            if (workoutMenu.exercises) {
+              const exerciseName = workoutMenu.exercises.name;
+              const lastWeight = localStorage.getItem(
+                `last_weight_${workoutMenu.exercises.name}`
+              );
+              const defaultWeight = lastWeight ? parseInt(lastWeight, 10) : 0;
+              result[exerciseName] = {
+                id: workoutMenu.exercises.id,
+                records: [
+                  {
+                    sets: 1,
+                    reps: 10,
+                    weight: defaultWeight,
+                  },
+                ],
+              };
+            }
+          }
+          setWorkoutRecords(result);
+          return;
+        }
         const result: WorkoutRecords = {};
         for (const workoutRecord of workoutRecordsData) {
           if (workoutRecord.exercises) {
