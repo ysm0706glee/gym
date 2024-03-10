@@ -29,5 +29,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (!user.data.user) {
     return redirect("/login");
   }
-  return redirect("/calendar");
+  return redirect("/home");
 }

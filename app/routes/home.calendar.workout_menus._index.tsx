@@ -1,12 +1,8 @@
 import { Button, NumberInput, Radio, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useLoaderData } from "@remix-run/react";
-import {
-  createBrowserClient,
-  createServerClient,
-  parse,
-  serialize,
-} from "@supabase/ssr";
+import { useLoaderData, useOutletContext } from "@remix-run/react";
+import { createServerClient, parse, serialize } from "@supabase/ssr";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
 import { useEffect, useState } from "react";
 import type { Database } from "~/types/supabase";
@@ -52,10 +48,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function WorkoutMenus() {
   const { date, env, workoutMenus } = useLoaderData<typeof loader>();
 
-  const supabase = createBrowserClient<Database>(
-    env.SUPABASE_URL,
-    env.SUPABASE_ANON_KEY
-  );
+  const { supabase } = useOutletContext<{
+    supabase: SupabaseClient<Database>;
+  }>();
 
   const [selectedWorkMenuId, setSelectedWorkMenuId] = useState<number | null>(
     null
@@ -181,10 +176,9 @@ type WorkoutRecordFormProps = {
 export function WorkoutRecordForm(props: WorkoutRecordFormProps) {
   const { env } = useLoaderData<typeof loader>();
 
-  const supabase = createBrowserClient<Database>(
-    env.SUPABASE_URL,
-    env.SUPABASE_ANON_KEY
-  );
+  const { supabase } = useOutletContext<{
+    supabase: SupabaseClient<Database>;
+  }>();
 
   const form = useForm({
     initialValues: props.workoutRecords,

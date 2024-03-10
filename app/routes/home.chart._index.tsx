@@ -1,12 +1,8 @@
 import { LineChart } from "@mantine/charts";
 import { Radio } from "@mantine/core";
-import { useLoaderData } from "@remix-run/react";
-import {
-  createBrowserClient,
-  createServerClient,
-  parse,
-  serialize,
-} from "@supabase/ssr";
+import { useLoaderData, useOutletContext } from "@remix-run/react";
+import { createServerClient, parse, serialize } from "@supabase/ssr";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { type LoaderFunctionArgs } from "@vercel/remix";
 import { useEffect, useState } from "react";
 import type { Database } from "~/types/supabase";
@@ -47,10 +43,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Login() {
   const { env, workoutMenus } = useLoaderData<typeof loader>();
 
-  const supabase = createBrowserClient<Database>(
-    env.SUPABASE_URL,
-    env.SUPABASE_ANON_KEY
-  );
+  const { supabase } = useOutletContext<{
+    supabase: SupabaseClient<Database>;
+  }>();
 
   const [selectedWorkMenuId, setSelectedWorkMenuId] = useState<number | null>(
     null
@@ -128,7 +123,6 @@ export default function Login() {
   return (
     <div>
       <h1>Chart</h1>
-      {selectedWorkMenuId}
       {workoutMenus.data?.map((workoutMenu) => (
         <Radio
           key={workoutMenu.id}

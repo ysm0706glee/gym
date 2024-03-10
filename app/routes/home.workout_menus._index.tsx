@@ -78,7 +78,7 @@ export default function WorkoutMenus() {
       <ul>
         {workoutMenus?.map((workoutMenu) => (
           <li key={workoutMenu.id}>
-            <Link to={`/workout_menus/${workoutMenu.id}`}>
+            <Link to={`/home/workout_menus/${workoutMenu.id}`}>
               <h2>{workoutMenu.name}</h2>
             </Link>
           </li>
