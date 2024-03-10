@@ -1,6 +1,12 @@
 import { Button, PasswordInput, TextInput } from "@mantine/core";
-import { Link, useLoaderData, useNavigate } from "@remix-run/react";
-import { createBrowserClient } from "@supabase/ssr";
+import {
+  Link,
+  useLoaderData,
+  useNavigate,
+  useOutletContext,
+} from "@remix-run/react";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "~/types/supabase";
 
 export function loader() {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
@@ -16,7 +22,10 @@ export function loader() {
 
 export default function Login() {
   const { env } = useLoaderData<typeof loader>();
-  const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+  const { supabase } = useOutletContext<{
+    supabase: SupabaseClient<Database>;
+  }>();
+
   const navigate = useNavigate();
 
   const isLocal = process.env.NODE_ENV === "development";
@@ -47,7 +56,7 @@ export default function Login() {
         password,
       });
       if (error) throw error;
-      return navigate("/calendar");
+      return navigate("/home");
     } catch (error) {
       // TODO: handle error
       console.error(error);

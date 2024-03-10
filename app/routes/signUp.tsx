@@ -1,7 +1,8 @@
 import { Button, PasswordInput, TextInput } from "@mantine/core";
-import { useLoaderData } from "@remix-run/react";
-import { createBrowserClient } from "@supabase/ssr";
+import { useLoaderData, useOutletContext } from "@remix-run/react";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { useState } from "react";
+import { Database } from "~/types/supabase";
 
 export function loader() {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
@@ -17,7 +18,9 @@ export function loader() {
 
 export default function SignUp() {
   const { env } = useLoaderData<typeof loader>();
-  const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+  const { supabase } = useOutletContext<{
+    supabase: SupabaseClient<Database>;
+  }>();
 
   const isLocal = process.env.NODE_ENV === "development";
 
