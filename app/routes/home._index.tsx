@@ -3,15 +3,15 @@ import { Link } from "@remix-run/react";
 export default function Home() {
   const LINKS = [
     {
-      href: "/home/calendar",
+      href: "/home/workout",
       label: "Start Workout",
     },
     {
-      href: "/home/Workout_menus",
+      href: "/home/workout_menus",
       label: "Manage your workout menus",
     },
     {
-      href: "/home/chart",
+      href: "/home/progress/chart",
       label: "View your progress",
     },
   ];
