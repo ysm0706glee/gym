@@ -1,10 +1,11 @@
 import { LineChart } from "@mantine/charts";
-import { Radio } from "@mantine/core";
-import { useLoaderData, useOutletContext } from "@remix-run/react";
+import { Tabs, Radio } from "@mantine/core";
+import { useLoaderData, useOutletContext, useNavigate } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { type LoaderFunctionArgs } from "@vercel/remix";
 import { useEffect, useState } from "react";
+import ProgressTab from "~/components/progressTab";
 import type { Database } from "~/types/supabase";
 import { ChartWorkoutRecord, ExerciseCount } from "~/types/workoutRecord";
 
@@ -37,11 +38,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   );
   const workoutMenus = await supabase.from("workout_menus").select("*");
-  return { env, workoutMenus };
+  return { workoutMenus };
 }
 
-export default function Login() {
-  const { env, workoutMenus } = useLoaderData<typeof loader>();
+export default function Chart() {
+  const { workoutMenus } = useLoaderData<typeof loader>();
 
   const { supabase } = useOutletContext<{
     supabase: SupabaseClient<Database>;
@@ -119,28 +120,31 @@ export default function Login() {
     };
     fetchWorkoutRecords();
   }, [supabase, selectedWorkMenuId]);
-
   return (
     <div>
-      <h1>Chart</h1>
-      {workoutMenus.data?.map((workoutMenu) => (
-        <Radio
-          key={workoutMenu.id}
-          name="workoutMenu"
-          label={workoutMenu.name}
-          checked={selectedWorkMenuId === workoutMenu.id}
-          onChange={async () => setSelectedWorkMenuId(workoutMenu.id)}
-        />
-      ))}
-      {chartWorkoutRecord.length && series && !isLoading && (
-        <LineChart
-          h={300}
-          data={chartWorkoutRecord}
-          dataKey="date"
-          series={series}
-          curveType="linear"
-        />
-      )}
+      <ProgressTab defaultValue="chart">
+        <Tabs.Panel value="chart">
+          <p>Select your work menu</p>
+          {workoutMenus.data?.map((workoutMenu) => (
+            <Radio
+              key={workoutMenu.id}
+              name="workoutMenu"
+              label={workoutMenu.name}
+              checked={selectedWorkMenuId === workoutMenu.id}
+              onChange={async () => setSelectedWorkMenuId(workoutMenu.id)}
+            />
+          ))}
+          {chartWorkoutRecord.length > 0 && series && !isLoading && (
+            <LineChart
+              h={300}
+              data={chartWorkoutRecord}
+              dataKey="date"
+              series={series}
+              curveType="linear"
+            />
+          )}
+        </Tabs.Panel>
+      </ProgressTab>
     </div>
   );
 }
