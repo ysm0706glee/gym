@@ -11,8 +11,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
     );
   const url = new URL(request.url);
-  const query = url.searchParams.get("date");
-  if (!query) throw new Error("date query parameter is required");
+  const date = url.searchParams.get("date");
+  if (!date) throw new Error("date query parameter is required");
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
@@ -39,7 +39,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { data, error } = await supabase
     .from("workout_records")
     .select("*, exercises (name)")
-    .eq("date", query);
+    .eq("date", date);
   if (error) throw error;
   const workoutRecords: WorkoutRecords = {};
   data?.forEach((record) => {
