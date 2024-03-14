@@ -3,7 +3,7 @@ import {
   type ActionFunction,
   type LoaderFunctionArgs,
   redirect,
-} from "@remix-run/node";
+} from "@vercel/remix";
 import { Form, useLoaderData } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import type { Database } from "~/types/supabase";

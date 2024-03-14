@@ -1,7 +1,11 @@
 import { TextInput } from "@mantine/core";
-import { type LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useLoaderData } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
+import {
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
+  redirect,
+} from "@vercel/remix";
 import type { Database } from "~/types/supabase";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -32,7 +36,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return { workoutMenus: workoutMenus.data };
 };
 
-export const action = async ({ request }: LoaderFunctionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
     throw new Error(
       "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
