@@ -3,7 +3,7 @@ import { Link } from "@remix-run/react";
 export default function Home() {
   const LINKS = [
     {
-      href: "/home/workout",
+      href: "/home/record",
       label: "Start Workout",
     },
     {
