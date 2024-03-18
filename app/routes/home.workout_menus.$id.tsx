@@ -1,4 +1,4 @@
-import { Button, TextInput } from "@mantine/core";
+import { Button, List, Text, TextInput } from "@mantine/core";
 import {
   type ActionFunction,
   type LoaderFunctionArgs,
@@ -7,6 +7,7 @@ import {
 import { Form, useLoaderData } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import type { Database } from "~/types/supabase";
+import WorkoutMenusModal from "~/components/modal";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
@@ -118,13 +119,20 @@ const WorkoutMenu = () => {
   const { exercises } = useLoaderData<typeof loader>();
 
   return (
-    <div>
-      <h1>Workout Menu</h1>
-      <ul>
+    <div style={{ height: "100%" }}>
+      <Text size="lg">Workout Menu</Text>
+      <List>
         {exercises?.map((exercise) => (
-          <li key={exercise.exercises?.id}>
-            <h2>{exercise.exercises?.name}</h2>
-            <Form method="post">
+          <List.Item key={exercise.exercises?.id}>
+            <Form
+              method="post"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text>{exercise.exercises?.name}</Text>
               <input
                 type="hidden"
                 name="exercisesId"
@@ -134,21 +142,32 @@ const WorkoutMenu = () => {
                 type="submit"
                 name="_action"
                 value="delete"
-                variant="filled"
+                variant="transparent"
                 color="red"
               >
-                Delete
+                ×
               </Button>
             </Form>
-          </li>
+          </List.Item>
         ))}
-      </ul>
-      <Form method="post">
-        <TextInput name="exercise" label="Exercise name" />
-        <button type="submit" name="_action" value="create">
-          Add exercise
-        </button>
-      </Form>
+      </List>
+      <WorkoutMenusModal buttonMessage="add exercise">
+        <Form
+          method="post"
+          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        >
+          <TextInput name="exercise" placeholder="exercise name" />
+          <Button
+            type="submit"
+            name="_action"
+            value="create"
+            variant="white"
+            color="gray"
+          >
+            Add exercise
+          </Button>
+        </Form>
+      </WorkoutMenusModal>
     </div>
   );
 };

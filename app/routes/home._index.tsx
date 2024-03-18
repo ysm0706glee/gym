@@ -1,3 +1,4 @@
+import { List, Text } from "@mantine/core";
 import { Link } from "@remix-run/react";
 
 export default function Home() {
@@ -8,24 +9,25 @@ export default function Home() {
     },
     {
       href: "/home/workout_menus",
-      label: "Manage your workout menus",
+      label: "Manage workout menus",
     },
     {
       href: "/home/progress/chart",
-      label: "View your progress",
+      label: "View progress",
     },
   ];
 
   return (
-    <div>
-      <h1>Home</h1>
-      <ul>
+    <div style={{ height: "100%" }}>
+      <List>
         {LINKS.map((link) => (
-          <li key={link.href}>
-            <Link to={link.href}>{link.label}</Link>
-          </li>
+          <List.Item key={link.href}>
+            <Link to={link.href}>
+              <Text size="xl">{link.label}</Text>
+            </Link>
+          </List.Item>
         ))}
-      </ul>
+      </List>
     </div>
   );
 }

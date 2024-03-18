@@ -7,7 +7,7 @@ import {
 } from "@vercel/remix";
 import type { Database } from "~/types/supabase";
 import type { WorkoutRecords } from "~/types/workoutRecord";
-import { NumberInput, Title, Button } from "@mantine/core";
+import { NumberInput, Button, Text } from "@mantine/core";
 import { useState } from "react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -197,18 +197,21 @@ export default function WorkoutRecord() {
   };
 
   return (
-    <div>
+    <div style={{ height: "100%" }}>
       {data?.message ? (
-        <div>Good job!</div>
+        <Text size="lg">Good job!</Text>
       ) : (
         <Form method="post">
           {Object.entries(workoutRecordsState).map(
             ([exerciseName, { id, records }]) => (
-              <div key={id}>
-                {exerciseName}
+              <div key={id} style={{ marginBottom: "1rem" }}>
+                <Text size="lg">{exerciseName}</Text>
                 {records.map((record, index) => (
-                  <div key={`${record.id}-${index}`}>
-                    <Title order={2}>{index + 1} sets</Title>
+                  <div
+                    key={`${record.id}-${index}`}
+                    style={{ marginBottom: "1rem" }}
+                  >
+                    <Text>{index + 1} sets</Text>
                     <NumberInput
                       name={`${id}-${index + 1}-reps`}
                       label="Reps"
@@ -232,13 +235,21 @@ export default function WorkoutRecord() {
                     />
                   </div>
                 ))}
-                <Button onClick={() => addRecord(exerciseName)}>
+                <Button
+                  variant="filled"
+                  color="gray"
+                  onClick={() => addRecord(exerciseName)}
+                >
                   Add Record
                 </Button>
               </div>
             )
           )}
-          <Button type="submit">Save</Button>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Button type="submit" variant="white" color="gray">
+              Save
+            </Button>
+          </div>
         </Form>
       )}
     </div>

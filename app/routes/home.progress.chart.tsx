@@ -1,5 +1,5 @@
 import { LineChart } from "@mantine/charts";
-import { Tabs, Radio } from "@mantine/core";
+import { Tabs, Radio, Text } from "@mantine/core";
 import { useLoaderData, useOutletContext, useNavigate } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -121,10 +121,10 @@ export default function Chart() {
     fetchWorkoutRecords();
   }, [supabase, selectedWorkMenuId]);
   return (
-    <div>
+    <div style={{ height: "100%" }}>
       <ProgressTab defaultValue="chart">
         <Tabs.Panel value="chart">
-          <p>Select your work menu</p>
+          <Text size="xl">Select work menu</Text>
           {workoutMenus.data?.map((workoutMenu) => (
             <Radio
               key={workoutMenu.id}

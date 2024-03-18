@@ -1,4 +1,4 @@
-import { Button, PasswordInput, TextInput } from "@mantine/core";
+import { Button, PasswordInput, Text, TextInput } from "@mantine/core";
 import { useLoaderData, useOutletContext } from "@remix-run/react";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useState } from "react";
@@ -50,8 +50,16 @@ export default function SignUp() {
   };
 
   return (
-    <div>
-      <form onSubmit={signUp}>
+    <div style={{ height: "100%", padding: "1rem" }}>
+      <form
+        style={{
+          marginBottom: "1rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
+        onSubmit={signUp}
+      >
         <TextInput
           withAsterisk
           label="Email"
@@ -59,9 +67,11 @@ export default function SignUp() {
           name="email"
         />
         <PasswordInput label="password" name="password" />
-        <Button type="submit">Sign Up</Button>
+        <Button type="submit" variant="white" color="gray">
+          Sign Up
+        </Button>
       </form>
-      {isSingedUp && <p>Check your email for a verification link</p>}
+      {isSingedUp && <Text>Check your email for a verification link</Text>}
     </div>
   );
 }

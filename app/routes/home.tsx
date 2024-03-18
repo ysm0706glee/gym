@@ -9,9 +9,17 @@ export default function Home() {
   }>();
 
   return (
-    <div>
+    <>
       <Header />
-      <Outlet context={{ supabase }} />
-    </div>
+      <main
+        style={{
+          height: "calc(100vh - 3rem)",
+          paddingLeft: "1rem",
+          paddingRight: "1rem",
+        }}
+      >
+        <Outlet context={{ supabase }} />
+      </main>
+    </>
   );
 }
