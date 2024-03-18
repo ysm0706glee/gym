@@ -1,0 +1,13 @@
+body {
+  background-color: #333;
+  color: #fff;
+}
+
+a {
+  text-decoration: none;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
