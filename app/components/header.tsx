@@ -16,9 +16,21 @@ export default function Header() {
   };
 
   return (
-    <header>
-      <Link to="/home">Home</Link>
-      <Button onClick={logOut}>log out</Button>
+    <header
+      style={{
+        height: "3rem",
+        borderBottom: "1px solid #fff",
+        paddingLeft: "1rem",
+        paddingRight: "1rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <Link to="/home">🏠</Link>
+      <Button variant="transparent" color="gray" onClick={logOut}>
+        log out
+      </Button>
     </header>
   );
 }

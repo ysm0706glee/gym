@@ -12,6 +12,7 @@ export default function ProgressTab(props: Props) {
 
   return (
     <Tabs
+      color="violet"
       defaultValue={props.defaultValue}
       onChange={(value) => navigate(`/home/progress/${value}`)}
     >

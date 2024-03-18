@@ -25,6 +25,7 @@ import {
 } from "@supabase/ssr";
 import { useEffect, useState } from "react";
 import { Database } from "./types/supabase";
+import "./global.css";
 
 export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
@@ -106,7 +107,7 @@ export default function App() {
         <ColorSchemeScript />
       </head>
       <body>
-        <MantineProvider>
+        <MantineProvider defaultColorScheme="dark">
           <Outlet context={{ supabase }} />
           <ScrollRestoration />
           <Scripts />

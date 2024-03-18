@@ -1,4 +1,4 @@
-import { Button, PasswordInput, TextInput } from "@mantine/core";
+import { Button, PasswordInput, Text, TextInput } from "@mantine/core";
 import {
   Link,
   useLoaderData,
@@ -8,20 +8,7 @@ import {
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "~/types/supabase";
 
-export function loader() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-  };
-  return { env };
-}
-
 export default function Login() {
-  const { env } = useLoaderData<typeof loader>();
   const { supabase } = useOutletContext<{
     supabase: SupabaseClient<Database>;
   }>();
@@ -64,9 +51,25 @@ export default function Login() {
   };
 
   return (
-    <div>
-      <Button onClick={loginWithGoogle}>Login with Google</Button>
-      <form onSubmit={loginWithPassword}>
+    <div style={{ height: "100%", padding: "1rem" }}>
+      <Button
+        style={{ width: "100%" }}
+        variant="white"
+        color="gray"
+        onClick={loginWithGoogle}
+      >
+        Login with Google
+      </Button>
+      <Text style={{ margin: "1rem 0" }}>or</Text>
+      <form
+        style={{
+          marginBottom: "1rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
+        onSubmit={loginWithPassword}
+      >
         <TextInput
           withAsterisk
           label="Email"
@@ -74,7 +77,9 @@ export default function Login() {
           name="email"
         />
         <PasswordInput label="password" name="password" />
-        <Button type="submit">Login</Button>
+        <Button type="submit" variant="white" color="gray">
+          Login
+        </Button>
       </form>
       <Link to="/signup">Sign Up</Link>
     </div>

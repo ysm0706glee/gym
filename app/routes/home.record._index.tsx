@@ -1,4 +1,4 @@
-import { Radio } from "@mantine/core";
+import { Radio, Text } from "@mantine/core";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { type LoaderFunctionArgs } from "@vercel/remix";
@@ -42,18 +42,20 @@ export default function Record() {
   const { workoutMenus } = useLoaderData<typeof loader>();
 
   return (
-    <div>
-      <p>Select your work menu</p>
-      {workoutMenus.data?.map((workoutMenu) => (
-        <Radio
-          key={workoutMenu.id}
-          name="workoutMenu"
-          label={workoutMenu.name}
-          onChange={async () =>
-            navigate(`/home/record/new?workout_menu_id=${workoutMenu.id}`)
-          }
-        />
-      ))}
+    <div style={{ height: "100%" }}>
+      <Text size="lg">Select work menu</Text>
+      <div>
+        {workoutMenus.data?.map((workoutMenu) => (
+          <Radio
+            key={workoutMenu.id}
+            name="workoutMenu"
+            label={workoutMenu.name}
+            onChange={async () =>
+              navigate(`/home/record/new?workout_menu_id=${workoutMenu.id}`)
+            }
+          />
+        ))}
+      </div>
     </div>
   );
 }

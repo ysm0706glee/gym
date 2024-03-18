@@ -1,4 +1,4 @@
-import { TextInput } from "@mantine/core";
+import { Button, List, Text, TextInput } from "@mantine/core";
 import { Form, Link, useLoaderData } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import {
@@ -6,6 +6,7 @@ import {
   ActionFunctionArgs,
   redirect,
 } from "@vercel/remix";
+import WorkoutModal from "~/components/WorkoutModal";
 import type { Database } from "~/types/supabase";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -70,28 +71,35 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     .from("workout_menus")
     .insert({ name, user_id: userId })
     .select();
-  return redirect(`/workout_menus/${data?.[0].id}`);
+  return redirect(`/home/workout_menus/${data?.[0].id}`);
 };
 
 export default function WorkoutMenus() {
   const { workoutMenus } = useLoaderData<typeof loader>();
 
   return (
-    <div>
-      <h1>Workout Menus</h1>
-      <ul>
+    <div style={{ height: "100%" }}>
+      <Text size="lg">Workout Menus</Text>
+      <List>
         {workoutMenus?.map((workoutMenu) => (
-          <li key={workoutMenu.id}>
+          <List.Item key={workoutMenu.id}>
             <Link to={`/home/workout_menus/${workoutMenu.id}`}>
-              <h2>{workoutMenu.name}</h2>
+              <Text>{workoutMenu.name}</Text>
             </Link>
-          </li>
+          </List.Item>
         ))}
-      </ul>
-      <Form method="post">
-        <TextInput name="menu" label="Menu name" />
-        <button type="submit">Add Menu</button>
-      </Form>
+      </List>
+      <WorkoutModal buttonMessage="add menu">
+        <Form
+          method="post"
+          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        >
+          <TextInput name="menu" placeholder="menu name" />
+          <Button type="submit" variant="white" color="gray">
+            Add
+          </Button>
+        </Form>
+      </WorkoutModal>
     </div>
   );
 }
