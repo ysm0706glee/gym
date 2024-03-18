@@ -6,7 +6,7 @@ import {
   ActionFunctionArgs,
   redirect,
 } from "@vercel/remix";
-import WorkoutMenusModal from "~/components/modal";
+import WorkoutModal from "~/components/WorkoutModal";
 import type { Database } from "~/types/supabase";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -89,7 +89,7 @@ export default function WorkoutMenus() {
           </List.Item>
         ))}
       </List>
-      <WorkoutMenusModal buttonMessage="add menu">
+      <WorkoutModal buttonMessage="add menu">
         <Form
           method="post"
           style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
@@ -99,7 +99,7 @@ export default function WorkoutMenus() {
             Add
           </Button>
         </Form>
-      </WorkoutMenusModal>
+      </WorkoutModal>
     </div>
   );
 }
