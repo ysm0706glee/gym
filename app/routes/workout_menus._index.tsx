@@ -6,7 +6,7 @@ import {
   ActionFunctionArgs,
   redirect,
 } from "@vercel/remix";
-import WorkoutModal from "~/components/WorkoutModal";
+import WorkoutModal from "~/components/workoutModal";
 import type { Database } from "~/types/supabase";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -33,6 +33,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       },
     }
   );
+  const user = await supabase.auth.getUser();
+  if (!user.data.user) return redirect("/login");
   const workoutMenus = await supabase.from("workout_menus").select("*");
   return { workoutMenus: workoutMenus.data };
 };
@@ -71,7 +73,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     .from("workout_menus")
     .insert({ name, user_id: userId })
     .select();
-  return redirect(`/home/workout_menus/${data?.[0].id}`);
+  return redirect(`/workout_menus/${data?.[0].id}`);
 };
 
 export default function WorkoutMenus() {
@@ -83,7 +85,7 @@ export default function WorkoutMenus() {
       <List>
         {workoutMenus?.map((workoutMenu) => (
           <List.Item key={workoutMenu.id}>
-            <Link to={`/home/workout_menus/${workoutMenu.id}`}>
+            <Link to={`/workout_menus/${workoutMenu.id}`}>
               <Text>{workoutMenu.name}</Text>
             </Link>
           </List.Item>

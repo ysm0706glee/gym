@@ -3,7 +3,7 @@ import { Tabs, Radio, Text } from "@mantine/core";
 import { useLoaderData, useOutletContext, useNavigate } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { type LoaderFunctionArgs } from "@vercel/remix";
+import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import { useEffect, useState } from "react";
 import ProgressTab from "~/components/progressTab";
 import type { Database } from "~/types/supabase";
@@ -37,6 +37,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     }
   );
+  const user = await supabase.auth.getUser();
+  if (!user.data.user) return redirect("/login");
   const workoutMenus = await supabase.from("workout_menus").select("*");
   return { workoutMenus };
 }

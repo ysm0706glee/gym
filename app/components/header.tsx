@@ -1,17 +1,18 @@
 import { Button } from "@mantine/core";
-import { useNavigate, useOutletContext } from "@remix-run/react";
+import { useNavigate } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "~/types/supabase";
 
-export default function Header() {
-  const { supabase } = useOutletContext<{
-    supabase: SupabaseClient<Database>;
-  }>();
+type Props = {
+  supabase: SupabaseClient<Database>;
+};
+
+export default function Header(props: Props) {
   const navigate = useNavigate();
 
   const logOut = async () => {
-    await supabase.auth.signOut();
+    await props.supabase.auth.signOut();
     navigate("/login");
   };
 
@@ -27,7 +28,7 @@ export default function Header() {
         alignItems: "center",
       }}
     >
-      <Link to="/home">🏠</Link>
+      <Link to="/">🏠</Link>
       <Button variant="transparent" color="gray" onClick={logOut}>
         log out
       </Button>

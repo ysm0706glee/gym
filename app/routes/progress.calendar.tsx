@@ -2,7 +2,7 @@ import { Tabs } from "@mantine/core";
 import { DatePicker, type DateValue } from "@mantine/dates";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
-import { type LoaderFunctionArgs } from "@vercel/remix";
+import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import ProgressTab from "~/components/progressTab";
 import type { Database } from "~/types/supabase";
 
@@ -34,6 +34,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     }
   );
+  const user = await supabase.auth.getUser();
+  if (!user.data.user) return redirect("/login");
   const { data, error } = await supabase.from("workout_records").select("date");
   if (error) throw error;
   const workoutDates = Array.from(new Set(data?.map((data) => data.date)));
@@ -69,7 +71,7 @@ export default function Calendar() {
                 .padStart(2, "0");
               const day = newDate.getDate().toString().padStart(2, "0");
               const formattedDate = `${year}-${month}-${day}`;
-              navigate(`/home/records/?date=${formattedDate}`);
+              navigate(`/records/?date=${formattedDate}`);
             }}
           />
         </Tabs.Panel>

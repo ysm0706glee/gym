@@ -1,7 +1,7 @@
 import { Radio, Text } from "@mantine/core";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
-import { type LoaderFunctionArgs } from "@vercel/remix";
+import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import type { Database } from "~/types/supabase";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -32,6 +32,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     }
   );
+  const user = await supabase.auth.getUser();
+  if (!user.data.user) return redirect("/login");
   const workoutMenus = await supabase.from("workout_menus").select("*");
   return { workoutMenus };
 }
@@ -51,7 +53,7 @@ export default function Record() {
             name="workoutMenu"
             label={workoutMenu.name}
             onChange={async () =>
-              navigate(`/home/record/new?workout_menu_id=${workoutMenu.id}`)
+              navigate(`/record/new?workout_menu_id=${workoutMenu.id}`)
             }
           />
         ))}
