@@ -2,22 +2,42 @@ import { Button, PasswordInput, Text, TextInput } from "@mantine/core";
 import { useLoaderData, useOutletContext } from "@remix-run/react";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { useState } from "react";
+import { createServerClient, parse, serialize } from "@supabase/ssr";
+import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
 import { Database } from "~/types/supabase";
 
-export function loader() {
+export async function loader({ request }: LoaderFunctionArgs) {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
     throw new Error(
       "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
     );
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-  };
-  return { env };
+  const cookies = parse(request.headers.get("Cookie") ?? "");
+  const headers = new Headers();
+  const supabase = createServerClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(key) {
+          return cookies[key];
+        },
+        set(key, value, options) {
+          headers.append("Set-Cookie", serialize(key, value, options));
+        },
+        remove(key, options) {
+          headers.append("Set-Cookie", serialize(key, "", options));
+        },
+      },
+    }
+  );
+  const user = await supabase.auth.getUser();
+  if (user.data.user) {
+    return redirect("/");
+  }
+  return null;
 }
 
 export default function SignUp() {
-  const { env } = useLoaderData<typeof loader>();
   const { supabase } = useOutletContext<{
     supabase: SupabaseClient<Database>;
   }>();
@@ -50,7 +70,7 @@ export default function SignUp() {
   };
 
   return (
-    <div style={{ height: "100%", padding: "1rem" }}>
+    <div style={{ height: "100%", paddingTop: "1rem" }}>
       <form
         style={{
           marginBottom: "1rem",
