@@ -7,7 +7,7 @@ import {
 import { Form, useLoaderData } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import type { Database } from "~/types/supabase";
-import WorkoutModal from "~/components/workoutModal";
+import Modal from "~/components/modal";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
@@ -153,7 +153,7 @@ const WorkoutMenu = () => {
           </List.Item>
         ))}
       </List>
-      <WorkoutModal buttonMessage="add exercise">
+      <Modal buttonMessage="add exercise">
         <Form
           method="post"
           style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
@@ -169,7 +169,7 @@ const WorkoutMenu = () => {
             Add exercise
           </Button>
         </Form>
-      </WorkoutModal>
+      </Modal>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useDisclosure } from "@mantine/hooks";
-import { Modal, Button } from "@mantine/core";
+import { Modal as MantineModal, Button } from "@mantine/core";
 import { ReactNode } from "react";
 
 type Props = {
@@ -7,14 +7,14 @@ type Props = {
   children: ReactNode;
 };
 
-export default function WorkoutModal(props: Props) {
+export default function Modal(props: Props) {
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
     <>
-      <Modal opened={opened} onClose={close} centered>
+      <MantineModal opened={opened} onClose={close} centered>
         {props.children}
-      </Modal>
+      </MantineModal>
 
       <Button variant="filled" color="gray" onClick={open}>
         {props.buttonMessage}
