@@ -1,12 +1,40 @@
 import { Button, PasswordInput, Text, TextInput } from "@mantine/core";
-import {
-  Link,
-  useLoaderData,
-  useNavigate,
-  useOutletContext,
-} from "@remix-run/react";
+import { Link, useNavigate, useOutletContext } from "@remix-run/react";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { createServerClient, parse, serialize } from "@supabase/ssr";
+import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
 import { Database } from "~/types/supabase";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
+    throw new Error(
+      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
+    );
+  const cookies = parse(request.headers.get("Cookie") ?? "");
+  const headers = new Headers();
+  const supabase = createServerClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(key) {
+          return cookies[key];
+        },
+        set(key, value, options) {
+          headers.append("Set-Cookie", serialize(key, value, options));
+        },
+        remove(key, options) {
+          headers.append("Set-Cookie", serialize(key, "", options));
+        },
+      },
+    }
+  );
+  const user = await supabase.auth.getUser();
+  if (user.data.user) {
+    return redirect("/");
+  }
+  return null;
+}
 
 export default function Login() {
   const { supabase } = useOutletContext<{
@@ -43,7 +71,7 @@ export default function Login() {
         password,
       });
       if (error) throw error;
-      return navigate("/home");
+      return navigate("/");
     } catch (error) {
       // TODO: handle error
       console.error(error);
@@ -51,7 +79,7 @@ export default function Login() {
   };
 
   return (
-    <div style={{ height: "100%", padding: "1rem" }}>
+    <div style={{ height: "100%", paddingTop: "1rem" }}>
       <Button
         style={{ width: "100%" }}
         variant="white"

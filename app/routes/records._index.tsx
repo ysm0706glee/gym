@@ -1,5 +1,5 @@
 import { useLoaderData } from "@remix-run/react";
-import { type LoaderFunctionArgs } from "@vercel/remix";
+import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { List } from "@mantine/core";
 import type { Database } from "~/types/supabase";
@@ -36,6 +36,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     }
   );
+  const user = await supabase.auth.getUser();
+  if (!user.data.user) return redirect("/login");
   const { data, error } = await supabase
     .from("workout_records")
     .select("*, exercises (name)")

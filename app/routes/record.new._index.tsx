@@ -4,6 +4,7 @@ import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
   json,
+  redirect,
 } from "@vercel/remix";
 import type { Database } from "~/types/supabase";
 import type { WorkoutRecords } from "~/types/workoutRecord";
@@ -41,6 +42,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     }
   );
+  const user = await supabase.auth.getUser();
+  if (!user.data.user) return redirect("/login");
   const workoutRecords: WorkoutRecords = {};
   try {
     const { data, error } = await supabase
@@ -104,7 +107,6 @@ export async function action({ request }: ActionFunctionArgs) {
   const body = await request.formData();
   // TODO: validate
   const rawFormData = Object.fromEntries(body.entries());
-  console.log("rawFormData: ", rawFormData);
   const date = new Date();
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
