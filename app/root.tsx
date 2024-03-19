@@ -26,6 +26,7 @@ import {
 import { useEffect, useState } from "react";
 import { Database } from "./types/supabase";
 import "./global.css";
+import Header from "./components/header";
 
 export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
@@ -62,16 +63,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-
+  const user = await supabase.auth.getUser();
   return {
     env,
     session,
-    headers,
+    user,
   };
 }
 
 export default function App() {
-  const { env, session } = useLoaderData<typeof loader>();
+  const { env, session, user } = useLoaderData<typeof loader>();
   const { revalidate } = useRevalidator();
 
   const [supabase] = useState(() =>
@@ -108,7 +109,16 @@ export default function App() {
       </head>
       <body>
         <MantineProvider defaultColorScheme="dark">
-          <Outlet context={{ supabase }} />
+          {user.data.user && <Header supabase={supabase} />}
+          <main
+            style={{
+              height: "calc(100vh - 3rem)",
+              paddingLeft: "1rem",
+              paddingRight: "1rem",
+            }}
+          >
+            <Outlet context={{ supabase }} />
+          </main>
           <ScrollRestoration />
           <Scripts />
           <LiveReload />
