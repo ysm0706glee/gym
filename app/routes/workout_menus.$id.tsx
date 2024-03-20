@@ -7,7 +7,6 @@ import {
 import { Form, useLoaderData } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import type { Database } from "~/types/supabase";
-import Modal from "../components/modal";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
@@ -39,6 +38,12 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   if (!workoutMenuId) {
     return redirect("/workout_menus");
   }
+  const { data: workoutMenuName } = await supabase
+    .from("workout_menus")
+    .select("name")
+    .eq("id", workoutMenuId)
+    .single();
+  console.log("LOOK:", workoutMenuName);
   const { data: exercises, error } = await supabase
     .from("workout_menus_exercises")
     .select("exercises (id, name)")
@@ -121,8 +126,8 @@ const WorkoutMenu = () => {
   const { exercises } = useLoaderData<typeof loader>();
 
   return (
-    <div style={{ height: "100%" }}>
-      <Text size="lg">Workout Menu</Text>
+    <div>
+      <Text size="lg"></Text>
       <List>
         {exercises?.map((exercise) => (
           <List.Item key={exercise.exercises?.id}>
@@ -153,23 +158,21 @@ const WorkoutMenu = () => {
           </List.Item>
         ))}
       </List>
-      <Modal buttonMessage="add exercise">
-        <Form
-          method="post"
-          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      <Form
+        method="post"
+        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      >
+        <TextInput name="exercise" placeholder="exercise name" />
+        <Button
+          type="submit"
+          name="_action"
+          value="create"
+          variant="white"
+          color="gray"
         >
-          <TextInput name="exercise" placeholder="exercise name" />
-          <Button
-            type="submit"
-            name="_action"
-            value="create"
-            variant="white"
-            color="gray"
-          >
-            Add exercise
-          </Button>
-        </Form>
-      </Modal>
+          Add exercise
+        </Button>
+      </Form>
     </div>
   );
 };
