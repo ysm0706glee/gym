@@ -62,7 +62,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
           .order("created_at", { ascending: false })
           .limit(1);
         if (weightError) throw weightError;
-        const defaultWeight = weightData[0].weight;
+        const defaultWeight = weightData[0]?.weight || 0;
         workoutRecords[exerciseName] = {
           id: exerciseId,
           records: [
@@ -207,7 +207,7 @@ export default function WorkoutRecord() {
   };
 
   return (
-    <div style={{ height: "100%" }}>
+    <div>
       {data?.message ? (
         <Text size="lg">Good job!</Text>
       ) : (
