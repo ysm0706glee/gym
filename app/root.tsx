@@ -13,7 +13,7 @@ import {
   useRevalidator,
 } from "@remix-run/react";
 import { Analytics } from "@vercel/analytics/react";
-import type { LinksFunction, LoaderFunctionArgs } from "@vercel/remix";
+import type { LoaderFunctionArgs } from "@vercel/remix";
 
 import {
   createBrowserClient,
@@ -25,8 +25,6 @@ import { useEffect, useState } from "react";
 import { Database } from "./types/supabase";
 import "./global.css";
 import Header from "./components/header";
-
-export const links: LinksFunction = () => [];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
