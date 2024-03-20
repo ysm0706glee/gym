@@ -53,15 +53,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (error) throw error;
     for (const workoutMenu of data) {
       if (workoutMenu.exercises) {
+        const exerciseId = workoutMenu.exercises.id;
         const exerciseName = workoutMenu.exercises.name;
+        const { data: weightData, error: weightError } = await supabase
+          .from("workout_records")
+          .select("weight")
+          .eq("exercises_id", exerciseId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (weightError) throw weightError;
+        const defaultWeight = weightData[0].weight;
         workoutRecords[exerciseName] = {
-          id: workoutMenu.exercises.id,
+          id: exerciseId,
           records: [
             {
               sets: 1,
               reps: 8,
-              // TODO: set default weight
-              weight: 0,
+              weight: defaultWeight,
             },
           ],
         };
