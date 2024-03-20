@@ -3,10 +3,8 @@ import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
-import { cssBundleHref } from "@remix-run/css-bundle";
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -28,9 +26,7 @@ import { Database } from "./types/supabase";
 import "./global.css";
 import Header from "./components/header";
 
-export const links: LinksFunction = () => [
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
+export const links: LinksFunction = () => [];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
@@ -121,7 +117,6 @@ export default function App() {
           </main>
           <ScrollRestoration />
           <Scripts />
-          <LiveReload />
           <Analytics />
         </MantineProvider>
       </body>
