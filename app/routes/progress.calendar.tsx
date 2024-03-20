@@ -3,7 +3,7 @@ import { DatePicker, type DateValue } from "@mantine/dates";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
-import ProgressTab from "~/components/progressTab";
+import ProgressTab from "../components/progressTab";
 import type { Database } from "~/types/supabase";
 
 export async function loader({ request }: LoaderFunctionArgs) {

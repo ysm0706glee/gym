@@ -1,5 +1,8 @@
 {
-  "include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["env.d.ts", "**/*.ts", "**/*.tsx"],
+  "skipLibCheck": true,
+  "module": "ESNext",
+  "moduleResolution": "Bundler",
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,

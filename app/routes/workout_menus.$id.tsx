@@ -7,7 +7,7 @@ import {
 import { Form, useLoaderData } from "@remix-run/react";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
 import type { Database } from "~/types/supabase";
-import Modal from "~/components/modal";
+import Modal from "../components/modal";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)

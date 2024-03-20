@@ -5,7 +5,7 @@ import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import { useEffect, useState } from "react";
-import ProgressTab from "~/components/progressTab";
+import ProgressTab from "../components/progressTab";
 import type { Database } from "~/types/supabase";
 import { ChartWorkoutRecord, ExerciseCount } from "~/types/workoutRecord";
 

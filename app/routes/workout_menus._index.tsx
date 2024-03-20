@@ -6,7 +6,7 @@ import {
   ActionFunctionArgs,
   redirect,
 } from "@vercel/remix";
-import Modal from "~/components/modal";
+import Modal from "../components/modal";
 import type { Database } from "~/types/supabase";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
