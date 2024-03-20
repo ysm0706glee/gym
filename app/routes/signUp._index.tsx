@@ -70,7 +70,7 @@ export default function SignUp() {
   };
 
   return (
-    <div style={{ height: "100%", paddingTop: "1rem" }}>
+    <div style={{ paddingTop: "1rem" }}>
       <form
         style={{
           marginBottom: "1rem",

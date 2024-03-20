@@ -58,7 +58,7 @@ export default function Calendar() {
   };
 
   return (
-    <div style={{ height: "100%" }}>
+    <div>
       <ProgressTab defaultValue="calendar">
         <Tabs.Panel value="calendar">
           <DatePicker

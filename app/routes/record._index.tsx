@@ -44,7 +44,7 @@ export default function Record() {
   const { workoutMenus } = useLoaderData<typeof loader>();
 
   return (
-    <div style={{ height: "100%" }}>
+    <div>
       <Text size="lg">Select work menu</Text>
       <div>
         {workoutMenus.data?.map((workoutMenu) => (

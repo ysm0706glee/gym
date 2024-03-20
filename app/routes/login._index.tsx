@@ -79,7 +79,7 @@ export default function Login() {
   };
 
   return (
-    <div style={{ height: "100%", paddingTop: "1rem" }}>
+    <div style={{ paddingTop: "1rem" }}>
       <Button
         style={{ width: "100%" }}
         variant="white"

@@ -50,7 +50,7 @@ export default function Home() {
   ];
 
   return (
-    <div style={{ height: "100%" }}>
+    <div>
       <List>
         {LINKS.map((link) => (
           <List.Item key={link.href}>

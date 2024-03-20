@@ -123,7 +123,7 @@ export default function Chart() {
     fetchWorkoutRecords();
   }, [supabase, selectedWorkMenuId]);
   return (
-    <div style={{ height: "100%" }}>
+    <div>
       <ProgressTab defaultValue="chart">
         <Tabs.Panel value="chart">
           <Text size="xl">Select work menu</Text>
