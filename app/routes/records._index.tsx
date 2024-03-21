@@ -68,17 +68,19 @@ export default function Records() {
   const { workoutRecords } = useLoaderData<typeof loader>();
 
   return (
-    <List>
-      {Object.entries(workoutRecords).map(([name, { id, records }]) => (
-        <List.Item key={id}>
-          {name}
-          {records.map((record) => (
-            <div key={record.id}>
-              {record.sets}x{record.reps} {record.weight}kg
-            </div>
-          ))}
-        </List.Item>
-      ))}
-    </List>
+    <div>
+      <List style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {Object.entries(workoutRecords).map(([name, { id, records }]) => (
+          <List.Item key={id}>
+            {name}
+            {records.map((record) => (
+              <div key={record.id}>
+                {record.sets}x{record.reps} {record.weight}kg
+              </div>
+            ))}
+          </List.Item>
+        ))}
+      </List>
+    </div>
   );
 }

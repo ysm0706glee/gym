@@ -51,10 +51,10 @@ export default function Home() {
 
   return (
     <div>
-      <List>
+      <List style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {LINKS.map((link) => (
           <List.Item key={link.href}>
-            <Link to={link.href}>
+            <Link style={{ color: "#fff" }} to={link.href}>
               <Text size="xl">{link.label}</Text>
             </Link>
           </List.Item>

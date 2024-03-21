@@ -126,16 +126,27 @@ export default function Chart() {
     <div>
       <ProgressTab defaultValue="chart">
         <Tabs.Panel value="chart">
-          <Text size="xl">Select work menu</Text>
-          {workoutMenus.data?.map((workoutMenu) => (
-            <Radio
-              key={workoutMenu.id}
-              name="workoutMenu"
-              label={workoutMenu.name}
-              checked={selectedWorkMenuId === workoutMenu.id}
-              onChange={async () => setSelectedWorkMenuId(workoutMenu.id)}
-            />
-          ))}
+          <Text style={{ paddingBottom: "1rem" }} size="xl">
+            Select work menu
+          </Text>
+          <div
+            style={{
+              paddingBottom: "1rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+            }}
+          >
+            {workoutMenus.data?.map((workoutMenu) => (
+              <Radio
+                key={workoutMenu.id}
+                name="workoutMenu"
+                label={workoutMenu.name}
+                checked={selectedWorkMenuId === workoutMenu.id}
+                onChange={async () => setSelectedWorkMenuId(workoutMenu.id)}
+              />
+            ))}
+          </div>
           {chartWorkoutRecord.length > 0 && series && !isLoading && (
             <LineChart
               h={300}

@@ -38,18 +38,17 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   if (!workoutMenuId) {
     return redirect("/workout_menus");
   }
-  const { data: workoutMenuName } = await supabase
+  const { data: workoutMenu } = await supabase
     .from("workout_menus")
     .select("name")
     .eq("id", workoutMenuId)
     .single();
-  console.log("LOOK:", workoutMenuName);
   const { data: exercises, error } = await supabase
     .from("workout_menus_exercises")
     .select("exercises (id, name)")
     .eq("workout_menus_id", workoutMenuId);
   if (error) new Response("Not Found", { status: 404 });
-  return { exercises };
+  return { workoutMenu, exercises };
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -123,12 +122,21 @@ export const action: ActionFunction = async ({ request, params }) => {
 };
 
 const WorkoutMenu = () => {
-  const { exercises } = useLoaderData<typeof loader>();
+  const { workoutMenu, exercises } = useLoaderData<typeof loader>();
 
   return (
     <div>
-      <Text size="lg"></Text>
-      <List>
+      <Text style={{ paddingBottom: "1rem" }} size="lg">
+        {workoutMenu?.name}
+      </Text>
+      <List
+        style={{
+          paddingBottom: "1rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
+      >
         {exercises?.map((exercise) => (
           <List.Item key={exercise.exercises?.id}>
             <Form

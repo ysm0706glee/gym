@@ -165,15 +165,12 @@ export default function WorkoutRecord() {
 
   const addRecord = (exerciseName: string) => {
     const currentRecords = workoutRecordsState[exerciseName];
-    console.log("currentRecords: ", currentRecords);
-
     const nextSet = currentRecords.records.length + 1;
-    // TODO: set default weight
-    const defaultWeight = 0;
+    const previousWeight = currentRecords.records.slice(-1)[0].weight;
     const newRecord = {
       sets: nextSet,
       reps: 8,
-      weight: defaultWeight,
+      weight: previousWeight,
     };
     setWorkoutRecordsState({
       ...workoutRecordsState,
@@ -214,12 +211,24 @@ export default function WorkoutRecord() {
         <Form method="post">
           {Object.entries(workoutRecordsState).map(
             ([exerciseName, { id, records }]) => (
-              <div key={id} style={{ marginBottom: "1rem" }}>
+              <div
+                key={id}
+                style={{
+                  marginBottom: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
                 <Text size="lg">{exerciseName}</Text>
                 {records.map((record, index) => (
                   <div
                     key={`${record.id}-${index}`}
-                    style={{ marginBottom: "1rem" }}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                    }}
                   >
                     <Text>{index + 1} sets</Text>
                     <NumberInput

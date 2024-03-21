@@ -45,8 +45,10 @@ export default function Record() {
 
   return (
     <div>
-      <Text size="lg">Select work menu</Text>
-      <div>
+      <Text style={{ paddingBottom: "1rem" }} size="lg">
+        Select work menu
+      </Text>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {workoutMenus.data?.map((workoutMenu) => (
           <Radio
             key={workoutMenu.id}

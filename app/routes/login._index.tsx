@@ -109,7 +109,9 @@ export default function Login() {
           Login
         </Button>
       </form>
-      <Link to="/signup">Sign Up</Link>
+      <Link style={{ color: "#fff" }} to="/signup">
+        Sign Up
+      </Link>
     </div>
   );
 }

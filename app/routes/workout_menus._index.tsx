@@ -80,11 +80,23 @@ export default function WorkoutMenus() {
 
   return (
     <div>
-      <Text size="lg">Workout Menus</Text>
-      <List>
+      <Text style={{ paddingBottom: "1rem" }} size="lg">
+        Workout Menus
+      </Text>
+      <List
+        style={{
+          paddingBottom: "1rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
+      >
         {workoutMenus?.map((workoutMenu) => (
           <List.Item key={workoutMenu.id}>
-            <Link to={`/workout_menus/${workoutMenu.id}`}>
+            <Link
+              style={{ color: "#fff" }}
+              to={`/workout_menus/${workoutMenu.id}`}
+            >
               <Text>{workoutMenu.name}</Text>
             </Link>
           </List.Item>
