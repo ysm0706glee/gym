@@ -1,9 +1,7 @@
 import { Radio, Text } from "@mantine/core";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
-import type { Database } from "~/types/supabase";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
