@@ -1,5 +1,5 @@
 import { Button } from "@mantine/core";
-import { useNavigate } from "@remix-run/react";
+import { Form } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "~/types/supabase";
@@ -9,13 +9,6 @@ type Props = {
 };
 
 export default function Header(props: Props) {
-  const navigate = useNavigate();
-
-  const logOut = async () => {
-    await props.supabase.auth.signOut();
-    navigate("/login");
-  };
-
   return (
     <header
       style={{
@@ -29,9 +22,11 @@ export default function Header(props: Props) {
       }}
     >
       <Link to="/">🏠</Link>
-      <Button variant="transparent" color="gray" onClick={logOut}>
-        log out
-      </Button>
+      <Form action="/logout" method="post">
+        <Button type="submit" variant="transparent" color="gray">
+          log out
+        </Button>
+      </Form>
     </header>
   );
 }
