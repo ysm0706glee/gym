@@ -8,7 +8,7 @@ import ProgressTab from "../components/progressTab";
 import type { Database } from "~/types/supabase";
 import { Chart } from "~/types/workoutRecord";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
-import { createChartData, createSeriesData } from "~/lib/chats";
+import { createChartData, createSeriesData } from "~/lib/charts";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
