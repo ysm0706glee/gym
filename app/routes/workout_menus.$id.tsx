@@ -1,106 +1,74 @@
 import { Button, List, Text, TextInput } from "@mantine/core";
 import {
-  type ActionFunction,
   type LoaderFunctionArgs,
   redirect,
+  ActionFunctionArgs,
+  json,
 } from "@vercel/remix";
-import { Form, useLoaderData } from "@remix-run/react";
-import { createServerClient, parse, serialize } from "@supabase/ssr";
-import type { Database } from "~/types/supabase";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { z } from "zod";
+import { createSupabaseServerClient } from "~/lib/supabase.server";
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
-  const cookies = parse(request.headers.get("Cookie") ?? "");
-  const headers = new Headers();
-  const supabase = createServerClient<Database>(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(key) {
-          return cookies[key];
-        },
-        set(key, value, options) {
-          headers.append("Set-Cookie", serialize(key, value, options));
-        },
-        remove(key, options) {
-          headers.append("Set-Cookie", serialize(key, "", options));
-        },
-      },
-    }
-  );
-  const user = await supabase.auth.getUser();
+const createSchema = z.object({
+  exercise: z.string(),
+});
+
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const { supabaseClient } = createSupabaseServerClient(request);
+  const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect("/login");
-  const workoutMenuId = params.id;
+  const workoutMenuId = Number(params.id);
   if (!workoutMenuId) {
     return redirect("/workout_menus");
   }
-  const { data: workoutMenu } = await supabase
+  const { data: workoutMenu } = await supabaseClient
     .from("workout_menus")
     .select("name")
     .eq("id", workoutMenuId)
     .single();
-  const { data: exercises, error } = await supabase
+  const { data: exercises, error } = await supabaseClient
     .from("workout_menus_exercises")
     .select("exercises (id, name)")
     .eq("workout_menus_id", workoutMenuId);
   if (error) new Response("Not Found", { status: 404 });
   return { workoutMenu, exercises };
-};
+}
 
-export const action: ActionFunction = async ({ request, params }) => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
-  const cookies = parse(request.headers.get("Cookie") ?? "");
-  const headers = new Headers();
-  const supabase = createServerClient<Database>(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(key) {
-          return cookies[key];
-        },
-        set(key, value, options) {
-          headers.append("Set-Cookie", serialize(key, value, options));
-        },
-        remove(key, options) {
-          headers.append("Set-Cookie", serialize(key, "", options));
-        },
-      },
-    }
-  );
+export async function action({ request, params }: ActionFunctionArgs) {
+  const { supabaseClient, headers } = createSupabaseServerClient(request);
   const body = await request.formData();
   const { _action, ...value } = Object.fromEntries(body);
+  const url = new URL(request.url);
   const workoutMenuId = Number(params.id);
   if (!workoutMenuId) return redirect("/workout_menus");
   if (_action === "delete") {
     const exercisesId = Number(value.exercisesId);
     // only delete form workout_menus_exercises table not from exercises table
-    const { data, error } = await supabase
+    const { error } = await supabaseClient
       .from("workout_menus_exercises")
       .delete()
       .eq("workout_menus_id", workoutMenuId)
       .eq("exercises_id", exercisesId)
       .select();
-    // TODO: handle error
+    if (error) {
+      return json({ error }, { headers });
+    }
     return null;
   }
   if (_action === "create") {
-    const exerciseName = String(value.exercise);
-    const { data: existingExercises } = await supabase
+    const parsed = createSchema.safeParse(value);
+    if (!parsed.success) {
+      return json({ error: parsed.error.format() });
+    }
+    const exerciseName = parsed.data.exercise;
+    const { data: existingExercises } = await supabaseClient
       .from("exercises")
       .select("id")
       .eq("name", exerciseName)
       .single();
     let exerciseId: number | null = null;
     if (!existingExercises) {
-      const { data: newExercise } = await supabase
+      const { data: newExercise } = await supabaseClient
         .from("exercises")
         .insert({ name: exerciseName })
         .select();
@@ -109,20 +77,23 @@ export const action: ActionFunction = async ({ request, params }) => {
     } else {
       exerciseId = existingExercises.id;
     }
-    const { data, error } = await supabase
+    const { error } = await supabaseClient
       .from("workout_menus_exercises")
       .insert({
         workout_menus_id: workoutMenuId,
         exercises_id: exerciseId,
       })
       .select();
-    // TODO: handle error
+    if (error) {
+      return json({ error }, { headers });
+    }
     return null;
   }
-};
+}
 
 const WorkoutMenu = () => {
   const { workoutMenu, exercises } = useLoaderData<typeof loader>();
+  const actionResponse = useActionData<typeof action>();
 
   return (
     <div>
@@ -181,6 +152,7 @@ const WorkoutMenu = () => {
           Add exercise
         </Button>
       </Form>
+      {actionResponse?.error && <Text>Failed</Text>}
     </div>
   );
 };
