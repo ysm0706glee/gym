@@ -1,35 +1,12 @@
 import { List, Text } from "@mantine/core";
 import { Link } from "@remix-run/react";
-import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
+import { createSupabaseServerClient } from "~/lib/supabase.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
-  const cookies = parse(request.headers.get("Cookie") ?? "");
-  const headers = new Headers();
-  const supabase = createServerClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(key) {
-          return cookies[key];
-        },
-        set(key, value, options) {
-          headers.append("Set-Cookie", serialize(key, value, options));
-        },
-        remove(key, options) {
-          headers.append("Set-Cookie", serialize(key, "", options));
-        },
-      },
-    }
-  );
-  const user = await supabase.auth.getUser();
+  const { supabaseClient } = createSupabaseServerClient(request);
+  const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect("/login");
-
   return null;
 }
 

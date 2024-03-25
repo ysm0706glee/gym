@@ -1,52 +1,27 @@
 import { useLoaderData, Form, useActionData } from "@remix-run/react";
-import { createServerClient, parse, serialize } from "@supabase/ssr";
 import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
   json,
   redirect,
 } from "@vercel/remix";
-import type { Database } from "~/types/supabase";
-import type { WorkoutRecords } from "~/types/workoutRecord";
+import type { FormDataEntry, WorkoutRecords } from "~/types/workoutRecord";
 import { NumberInput, Button, Text } from "@mantine/core";
 import { useState } from "react";
+import { createSupabaseServerClient } from "~/lib/supabase.server";
+import { parseFormData } from "~/lib/records";
+import { formateDate } from "~/lib/date";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
   const url = new URL(request.url);
-  const workoutMenuId = url.searchParams.get("workout_menu_id");
+  const workoutMenuId = Number(url.searchParams.get("workout_menu_id"));
   if (!workoutMenuId) throw new Error("workout_menu_id must be defined");
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-  };
-  const cookies = parse(request.headers.get("Cookie") ?? "");
-  const headers = new Headers();
-  const supabase = createServerClient<Database>(
-    env.SUPABASE_URL,
-    env.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(key) {
-          return cookies[key];
-        },
-        set(key, value, options) {
-          headers.append("Set-Cookie", serialize(key, value, options));
-        },
-        remove(key, options) {
-          headers.append("Set-Cookie", serialize(key, "", options));
-        },
-      },
-    }
-  );
-  const user = await supabase.auth.getUser();
+  const { supabaseClient } = createSupabaseServerClient(request);
+  const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect("/login");
   const workoutRecords: WorkoutRecords = {};
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("workout_menus_exercises")
       .select("exercises (id, name)")
       .eq("workout_menus_id", workoutMenuId);
@@ -55,20 +30,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
       if (workoutMenu.exercises) {
         const exerciseId = workoutMenu.exercises.id;
         const exerciseName = workoutMenu.exercises.name;
-        const { data: weightData, error: weightError } = await supabase
+        const { data: recordsData, error: recordsError } = await supabaseClient
           .from("workout_records")
-          .select("weight")
+          .select("reps, weight")
           .eq("exercises_id", exerciseId)
           .order("created_at", { ascending: false })
           .limit(1);
-        if (weightError) throw weightError;
-        const defaultWeight = weightData[0]?.weight || 0;
+        if (recordsError) throw recordsError;
+        const defaultReps = recordsData[0]?.reps || 8;
+        const defaultWeight = recordsData[0]?.weight || 0;
         workoutRecords[exerciseName] = {
           id: exerciseId,
           records: [
             {
               sets: 1,
-              reps: 8,
+              reps: defaultReps,
               weight: defaultWeight,
             },
           ],
@@ -76,84 +52,41 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }
     }
   } catch (error) {
-    console.error("Error fetching workout records:", error);
+    console.error(error);
   }
   return { workoutRecords };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
-  const url = new URL(request.url);
-  const workoutMenuId = Number(url.searchParams.get("workout_menu_id"));
-  if (!workoutMenuId) throw new Error("workout_menu_id must be defined");
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-  };
-  const cookies = parse(request.headers.get("Cookie") ?? "");
-  const headers = new Headers();
-  const supabase = createServerClient<Database>(
-    env.SUPABASE_URL,
-    env.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(key) {
-          return cookies[key];
-        },
-        set(key, value, options) {
-          headers.append("Set-Cookie", serialize(key, value, options));
-        },
-        remove(key, options) {
-          headers.append("Set-Cookie", serialize(key, "", options));
-        },
-      },
+  try {
+    const url = new URL(request.url);
+    const workoutMenuId = Number(url.searchParams.get("workout_menu_id"));
+    if (!workoutMenuId) {
+      throw new Error("Invalid workout_menu_id value");
     }
-  );
-  const body = await request.formData();
-  // TODO: validate
-  const rawFormData = Object.fromEntries(body.entries());
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const day = date.getDate().toString().padStart(2, "0");
-  const formattedDate = `${year}-${month}-${day}`;
-  const record: {
-    workout_menus_id: number;
-    date: string;
-    exercises_id: number;
-    sets: number;
-    reps: number;
-    weight: number;
-  } = {
-    workout_menus_id: workoutMenuId,
-    date: formattedDate,
-    exercises_id: 0,
-    sets: 0,
-    reps: 0,
-    weight: 0,
-  };
-  // TODO: refactor
-  for (const [key, value] of Object.entries(rawFormData)) {
-    const [exercisesId, set, type] = key.split("-");
-    if (type === "reps") {
-      record.exercises_id = Number(exercisesId);
-      record.sets = Number(set);
-      record.reps = Number(value);
+    const { supabaseClient } = createSupabaseServerClient(request);
+    const body = await request.formData();
+    const formData: Map<string, FormDataEntry> = new Map();
+    const date = formateDate(new Date());
+    for (const [key, rawValue] of body.entries()) {
+      const [exercisesId, set, type] = key.split("-");
+      const value = rawValue.toString();
+      formData.set(key, {
+        exercises_id: exercisesId,
+        sets: set,
+        type: type as "reps" | "weight",
+        value,
+      });
     }
-    if (type === "weight") {
-      record.weight = Number(value);
-      const { error } = await supabase.from("workout_records").insert([record]);
-      if (error) throw error;
-      record.exercises_id = 0;
-      record.sets = 0;
-      record.reps = 0;
-      record.weight = 0;
-    }
+    const records = parseFormData(formData, workoutMenuId, date);
+    const { error } = await supabaseClient
+      .from("workout_records")
+      .insert(records);
+    if (error) throw error;
+    return json({ message: "success" });
+  } catch (error) {
+    console.error(error);
   }
-  return json({ message: "success" });
 }
 
 export default function WorkoutRecord() {
@@ -166,10 +99,11 @@ export default function WorkoutRecord() {
   const addRecord = (exerciseName: string) => {
     const currentRecords = workoutRecordsState[exerciseName];
     const nextSet = currentRecords.records.length + 1;
+    const previousReps = currentRecords.records.slice(-1)[0].reps;
     const previousWeight = currentRecords.records.slice(-1)[0].weight;
     const newRecord = {
       sets: nextSet,
-      reps: 8,
+      reps: previousReps,
       weight: previousWeight,
     };
     setWorkoutRecordsState({

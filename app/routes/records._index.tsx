@@ -1,66 +1,22 @@
 import { useLoaderData } from "@remix-run/react";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
-import { createServerClient, parse, serialize } from "@supabase/ssr";
 import { List } from "@mantine/core";
-import type { Database } from "~/types/supabase";
-import type { WorkoutRecords } from "~/types/workoutRecord";
+import { createSupabaseServerClient } from "~/lib/supabase.server";
+import { formateRecords } from "~/lib/records";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
   const url = new URL(request.url);
   const date = url.searchParams.get("date");
   if (!date) throw new Error("date query parameter is required");
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-  };
-  const cookies = parse(request.headers.get("Cookie") ?? "");
-  const headers = new Headers();
-  const supabase = createServerClient<Database>(
-    env.SUPABASE_URL,
-    env.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(key) {
-          return cookies[key];
-        },
-        set(key, value, options) {
-          headers.append("Set-Cookie", serialize(key, value, options));
-        },
-        remove(key, options) {
-          headers.append("Set-Cookie", serialize(key, "", options));
-        },
-      },
-    }
-  );
-  const user = await supabase.auth.getUser();
+  const { supabaseClient } = createSupabaseServerClient(request);
+  const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect("/login");
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("workout_records")
-    .select("*, exercises (name)")
+    .select("*, exercises (*)")
     .eq("date", date);
   if (error) throw error;
-  const workoutRecords: WorkoutRecords = {};
-  data?.forEach((record) => {
-    const name = record.exercises?.name;
-    if (name) {
-      if (!workoutRecords[name]) {
-        workoutRecords[name] = {
-          id: record.exercises_id,
-          records: [],
-        };
-      }
-      workoutRecords[name].records.push({
-        id: record.id,
-        sets: record.sets,
-        reps: record.reps,
-        weight: record.weight,
-      });
-    }
-  });
+  const workoutRecords = formateRecords(data);
   return { workoutRecords };
 }
 

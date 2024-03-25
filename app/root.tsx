@@ -15,62 +15,35 @@ import {
 import { Analytics } from "@vercel/analytics/react";
 import type { LoaderFunctionArgs } from "@vercel/remix";
 
-import {
-  createBrowserClient,
-  createServerClient,
-  parse,
-  serialize,
-} from "@supabase/ssr";
+import { createBrowserClient } from "@supabase/ssr";
 import { useEffect, useState } from "react";
 import { Database } from "./types/supabase";
 import "./global.css";
 import Header from "./components/header";
+import { createSupabaseServerClient } from "./lib/supabase.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be defined in .env"
-    );
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-  };
-  const cookies = parse(request.headers.get("Cookie") ?? "");
-  const headers = new Headers();
-  const supabase = createServerClient<Database>(
-    env.SUPABASE_URL,
-    env.SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(key) {
-          return cookies[key];
-        },
-        set(key, value, options) {
-          headers.append("Set-Cookie", serialize(key, value, options));
-        },
-        remove(key, options) {
-          headers.append("Set-Cookie", serialize(key, "", options));
-        },
-      },
-    }
-  );
+  const { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseClient } =
+    createSupabaseServerClient(request);
   const {
     data: { session },
-  } = await supabase.auth.getSession();
-  const user = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getSession();
+  const user = await supabaseClient.auth.getUser();
   return {
-    env,
+    SUPABASE_ANON_KEY,
+    SUPABASE_URL,
     session,
     user,
   };
 }
 
 export default function App() {
-  const { env, session, user } = useLoaderData<typeof loader>();
+  const { SUPABASE_ANON_KEY, SUPABASE_URL, session, user } =
+    useLoaderData<typeof loader>();
   const { revalidate } = useRevalidator();
 
   const [supabase] = useState(() =>
-    createBrowserClient<Database>(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
+    createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
   );
 
   const serverAccessToken = session?.access_token;
@@ -83,7 +56,6 @@ export default function App() {
         event !== "INITIAL_SESSION" &&
         session?.access_token !== serverAccessToken
       ) {
-        // server and client are out of sync.
         revalidate();
       }
     });
