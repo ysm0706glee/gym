@@ -5,14 +5,15 @@ import {
   ActionFunctionArgs,
   redirect,
 } from "@vercel/remix";
+import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
-  if (!user.data.user) return redirect("/login");
-  const workoutMenus = await supabaseClient.from("workout_menus").select("*");
-  return { workoutMenus: workoutMenus.data };
+  if (!user.data.user) return redirect(links.login);
+  const { data: menus } = await supabaseClient.from("menus").select("*");
+  return { menus };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -22,16 +23,16 @@ export async function action({ request }: ActionFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
   const userId = user?.data.user?.id;
-  if (!userId) return redirect("/login");
+  if (!userId) return redirect(links.login);
   const { data } = await supabaseClient
-    .from("workout_menus")
+    .from("menus")
     .insert({ name, user_id: userId })
     .select();
-  return redirect(`/workout_menus/${data?.[0].id}`);
+  return redirect(`${links.menus}/${data?.[0].id}`);
 }
 
-export default function WorkoutMenus() {
-  const { workoutMenus } = useLoaderData<typeof loader>();
+export default function Menus() {
+  const { menus } = useLoaderData<typeof loader>();
 
   return (
     <div>
@@ -46,13 +47,10 @@ export default function WorkoutMenus() {
           gap: "1rem",
         }}
       >
-        {workoutMenus?.map((workoutMenu) => (
-          <List.Item key={workoutMenu.id}>
-            <Link
-              style={{ color: "#fff" }}
-              to={`/workout_menus/${workoutMenu.id}`}
-            >
-              <Text>{workoutMenu.name}</Text>
+        {menus?.map((menu) => (
+          <List.Item key={menu.id}>
+            <Link style={{ color: "#fff" }} to={`${links.menus}/${menu.id}`}>
+              <Text>{menu.name}</Text>
             </Link>
           </List.Item>
         ))}

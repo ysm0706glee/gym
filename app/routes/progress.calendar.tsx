@@ -5,27 +5,26 @@ import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import ProgressTab from "../components/progressTab";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { formateDate } from "~/lib/date";
+import { links } from "~/lib/links";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
-  if (!user.data.user) return redirect("/login");
-  const { data, error } = await supabaseClient
-    .from("workout_records")
-    .select("date");
+  if (!user.data.user) return redirect(links.login);
+  const { data, error } = await supabaseClient.from("records").select("date");
   if (error) throw error;
-  const workoutDates = Array.from(new Set(data?.map((data) => data.date)));
-  return { workoutDates };
+  const recordDates = Array.from(new Set(data?.map((data) => data.date)));
+  return { recordDates };
 }
 
 export default function Calendar() {
   const navigate = useNavigate();
 
-  const { workoutDates } = useLoaderData<typeof loader>();
+  const { recordDates } = useLoaderData<typeof loader>();
 
   const dayRenderer = (date: Date) => {
     const formattedDate = formateDate(date);
-    if (workoutDates.includes(formattedDate)) {
+    if (recordDates.includes(formattedDate)) {
       return <span>{date.getDate()}💪🏻</span>;
     }
   };
@@ -39,7 +38,7 @@ export default function Calendar() {
             onChange={(newDate: DateValue) => {
               if (!newDate) return;
               const formattedDate = formateDate(newDate);
-              navigate(`/records/?date=${formattedDate}`);
+              navigate(`${links.records}/?date=${formattedDate}`);
             }}
           />
         </Tabs.Panel>

@@ -3,6 +3,7 @@ import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import { List } from "@mantine/core";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { formateRecords } from "~/lib/records";
+import { links } from "~/lib/links";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -10,23 +11,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (!date) throw new Error("date query parameter is required");
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
-  if (!user.data.user) return redirect("/login");
+  if (!user.data.user) return redirect(links.login);
   const { data, error } = await supabaseClient
-    .from("workout_records")
+    .from("records")
     .select("*, exercises (*)")
     .eq("date", date);
   if (error) throw error;
-  const workoutRecords = formateRecords(data);
-  return { workoutRecords };
+  const records = formateRecords(data);
+  return { records };
 }
 
 export default function Records() {
-  const { workoutRecords } = useLoaderData<typeof loader>();
+  const { records } = useLoaderData<typeof loader>();
 
   return (
     <div>
       <List style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {Object.entries(workoutRecords).map(([name, { id, records }]) => (
+        {Object.entries(records).map(([name, { id, records }]) => (
           <List.Item key={id}>
             {name}
             {records.map((record) => (

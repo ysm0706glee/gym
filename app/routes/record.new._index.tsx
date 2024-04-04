@@ -5,41 +5,44 @@ import {
   json,
   redirect,
 } from "@vercel/remix";
-import type { FormDataEntry, WorkoutRecords } from "~/types/workoutRecord";
+import type { FormDataEntry, Records } from "~/types/workoutRecord";
 import { NumberInput, Button, Text } from "@mantine/core";
 import { useState } from "react";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { parseFormData } from "~/lib/records";
 import { formateDate } from "~/lib/date";
+import { links } from "~/lib/links";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const workoutMenuId = Number(url.searchParams.get("workout_menu_id"));
-  if (!workoutMenuId) throw new Error("workout_menu_id must be defined");
+  const menuId = Number(url.searchParams.get("menu_id"));
+  if (!menuId) throw new Error("menu_id must be defined");
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
-  if (!user.data.user) return redirect("/login");
-  const workoutRecords: WorkoutRecords = {};
+  if (!user.data.user) return redirect(links.login);
+  const records: Records = {};
   try {
     const { data, error } = await supabaseClient
-      .from("workout_menus_exercises")
+      .from("menus_exercises")
       .select("exercises (id, name)")
-      .eq("workout_menus_id", workoutMenuId);
+      .eq("menu_id", menuId);
+    console.log("data: ", data);
     if (error) throw error;
-    for (const workoutMenu of data) {
-      if (workoutMenu.exercises) {
-        const exerciseId = workoutMenu.exercises.id;
-        const exerciseName = workoutMenu.exercises.name;
+    for (const menu of data) {
+      if (menu.exercises) {
+        const exerciseId = menu.exercises.id;
+        const exerciseName = menu.exercises.name;
         const { data: recordsData, error: recordsError } = await supabaseClient
-          .from("workout_records")
+          .from("records")
           .select("reps, weight")
-          .eq("exercises_id", exerciseId)
-          .order("created_at", { ascending: false })
+          .eq("exercise_id", exerciseId)
+          // .order("created_at", { ascending: false })
           .limit(1);
         if (recordsError) throw recordsError;
         const defaultReps = recordsData[0]?.reps || 8;
+        // FIXME: default weight should be the last record's weight
         const defaultWeight = recordsData[0]?.weight || 0;
-        workoutRecords[exerciseName] = {
+        records[exerciseName] = {
           id: exerciseId,
           records: [
             {
@@ -54,34 +57,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
   } catch (error) {
     console.error(error);
   }
-  return { workoutRecords };
+  return { records };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
     const url = new URL(request.url);
-    const workoutMenuId = Number(url.searchParams.get("workout_menu_id"));
-    if (!workoutMenuId) {
-      throw new Error("Invalid workout_menu_id value");
+    const menuId = Number(url.searchParams.get("menu_id"));
+    if (!menuId) {
+      throw new Error("Invalid menu_id value");
     }
     const { supabaseClient } = createSupabaseServerClient(request);
     const body = await request.formData();
     const formData: Map<string, FormDataEntry> = new Map();
     const date = formateDate(new Date());
     for (const [key, rawValue] of body.entries()) {
-      const [exercisesId, set, type] = key.split("-");
+      const [exerciseId, set, type] = key.split("-");
       const value = rawValue.toString();
       formData.set(key, {
-        exercises_id: exercisesId,
+        exercise_id: exerciseId,
         sets: set,
         type: type as "reps" | "weight",
         value,
       });
     }
-    const records = parseFormData(formData, workoutMenuId, date);
-    const { error } = await supabaseClient
-      .from("workout_records")
-      .insert(records);
+    const records = parseFormData(formData, menuId, date);
+    const { error } = await supabaseClient.from("records").insert(records);
     if (error) throw error;
     return json({ message: "success" });
   } catch (error) {
@@ -90,14 +91,13 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function WorkoutRecord() {
-  const { workoutRecords } = useLoaderData<typeof loader>();
+  const { records } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
 
-  const [workoutRecordsState, setWorkoutRecordsState] =
-    useState(workoutRecords);
+  const [recordsState, setRecordsState] = useState(records);
 
   const addRecord = (exerciseName: string) => {
-    const currentRecords = workoutRecordsState[exerciseName];
+    const currentRecords = recordsState[exerciseName];
     const nextSet = currentRecords.records.length + 1;
     const previousReps = currentRecords.records.slice(-1)[0].reps;
     const previousWeight = currentRecords.records.slice(-1)[0].weight;
@@ -106,8 +106,8 @@ export default function WorkoutRecord() {
       reps: previousReps,
       weight: previousWeight,
     };
-    setWorkoutRecordsState({
-      ...workoutRecordsState,
+    setRecordsState({
+      ...recordsState,
       [exerciseName]: {
         ...currentRecords,
         records: [...currentRecords.records, newRecord],
@@ -121,15 +121,15 @@ export default function WorkoutRecord() {
     field: "reps" | "weight",
     value: number
   ) => {
-    const currentRecords = workoutRecordsState[exerciseName];
+    const currentRecords = recordsState[exerciseName];
     const updatedRecords = currentRecords.records.map((record, index) => {
       if (index === setId) {
         return { ...record, [field]: value };
       }
       return record;
     });
-    setWorkoutRecordsState({
-      ...workoutRecordsState,
+    setRecordsState({
+      ...recordsState,
       [exerciseName]: {
         ...currentRecords,
         records: updatedRecords,
@@ -143,7 +143,7 @@ export default function WorkoutRecord() {
         <Text size="lg">Good job!</Text>
       ) : (
         <Form method="post">
-          {Object.entries(workoutRecordsState).map(
+          {Object.entries(recordsState).map(
             ([exerciseName, { id, records }]) => (
               <div
                 key={id}

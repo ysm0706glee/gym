@@ -1,20 +1,21 @@
 import { Radio, Text } from "@mantine/core";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
+import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
-  if (!user.data.user) return redirect("/login");
-  const workoutMenus = await supabaseClient.from("workout_menus").select("*");
-  return { workoutMenus };
+  if (!user.data.user) return redirect(links.login);
+  const menus = await supabaseClient.from("menus").select("*");
+  return { menus };
 }
 
 export default function Record() {
   const navigate = useNavigate();
 
-  const { workoutMenus } = useLoaderData<typeof loader>();
+  const { menus } = useLoaderData<typeof loader>();
 
   return (
     <div>
@@ -22,13 +23,13 @@ export default function Record() {
         Select work menu
       </Text>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {workoutMenus.data?.map((workoutMenu) => (
+        {menus.data?.map((menu) => (
           <Radio
-            key={workoutMenu.id}
-            name="workoutMenu"
-            label={workoutMenu.name}
+            key={menu.id}
+            name="menu"
+            label={menu.name}
             onChange={async () =>
-              navigate(`/record/new?workout_menu_id=${workoutMenu.id}`)
+              navigate(`${links.newRecord}/?menu_id=${menu.id}`)
             }
           />
         ))}
