@@ -2,6 +2,7 @@ import { Button } from "@mantine/core";
 import { Form } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { links } from "~/lib/links";
 import { Database } from "~/types/supabase";
 
 type Props = {
@@ -21,7 +22,7 @@ export default function Header(props: Props) {
         alignItems: "center",
       }}
     >
-      <Link to="/">🏠</Link>
+      <Link to={links.home}>🏠</Link>
       <Form action="/logout" method="post">
         <Button type="submit" variant="transparent" color="gray">
           log out

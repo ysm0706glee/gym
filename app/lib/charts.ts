@@ -15,7 +15,7 @@ const dataSchema = z.object({
 
 type Data = z.infer<typeof dataSchema>;
 
-export const createChartData = (data: Data[]) => {
+export const createChart = (data: Data[]) => {
   const charts: Chart[] = [];
   data.forEach((record) => {
     const { date, weight, exercises } = record;
@@ -38,7 +38,7 @@ export const createChartData = (data: Data[]) => {
   return charts;
 };
 
-export const createSeriesData = (exerciseNames: Set<string>) => {
+export const createSeries = (exerciseNames: Set<string>) => {
   let colorIndex = 0;
   return Array.from(exerciseNames).map((name) => {
     const color = colors[colorIndex++ % colors.length];

@@ -8,43 +8,41 @@ import ProgressTab from "../components/progressTab";
 import type { Database } from "~/types/supabase";
 import { Chart } from "~/types/workoutRecord";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
-import { createChartData, createSeriesData } from "~/lib/charts";
+import { createChart, createSeries } from "~/lib/charts";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect("/login");
-  const workoutMenus = await supabaseClient.from("workout_menus").select("*");
-  return { workoutMenus };
+  const menus = await supabaseClient.from("menus").select("*");
+  return { menus };
 }
 
 export default function Chart() {
-  const { workoutMenus } = useLoaderData<typeof loader>();
+  const { menus } = useLoaderData<typeof loader>();
 
   const { supabase } = useOutletContext<{
     supabase: SupabaseClient<Database>;
   }>();
 
-  const [selectedWorkMenuId, setSelectedWorkMenuId] = useState<number | null>(
-    null
-  );
+  const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [chartWorkoutRecord, setChartWorkoutRecord] = useState<Chart[]>([]);
+  const [charts, setChart] = useState<Chart[]>([]);
   const [series, setSeries] = useState<{ name: string; color: string }[]>([]);
 
   useEffect(() => {
-    if (!selectedWorkMenuId) return;
+    if (!selectedMenuId) return;
     const fetchWorkoutRecords = async () => {
       setIsLoading(true);
       try {
         const { data, error } = await supabase
-          .from("workout_records")
+          .from("records")
           .select("date, weight, exercises (id, name)")
-          .eq("workout_menus_id", selectedWorkMenuId)
+          .eq("menu_id", selectedMenuId)
           .order("date", { ascending: true });
         if (error) throw error;
-        const charts = createChartData(data);
-        setChartWorkoutRecord(charts);
+        const charts = createChart(data);
+        setChart(charts);
         const exerciseNames: Set<string> = new Set();
         data.forEach((record) => {
           const exercises = record.exercises;
@@ -52,7 +50,7 @@ export default function Chart() {
             exerciseNames.add(exercises.name);
           }
         });
-        const series = createSeriesData(exerciseNames);
+        const series = createSeries(exerciseNames);
         setSeries(series);
       } catch (error) {
         console.error("Error fetching workout records:", error);
@@ -61,7 +59,7 @@ export default function Chart() {
       }
     };
     fetchWorkoutRecords();
-  }, [supabase, selectedWorkMenuId]);
+  }, [supabase, selectedMenuId]);
 
   return (
     <div>
@@ -78,20 +76,20 @@ export default function Chart() {
               gap: "1rem",
             }}
           >
-            {workoutMenus.data?.map((workoutMenu) => (
+            {menus.data?.map((menu) => (
               <Radio
-                key={workoutMenu.id}
+                key={menu.id}
                 name="workoutMenu"
-                label={workoutMenu.name}
-                checked={selectedWorkMenuId === workoutMenu.id}
-                onChange={async () => setSelectedWorkMenuId(workoutMenu.id)}
+                label={menu.name}
+                checked={selectedMenuId === menu.id}
+                onChange={async () => setSelectedMenuId(menu.id)}
               />
             ))}
           </div>
-          {chartWorkoutRecord.length > 0 && series && !isLoading && (
+          {charts.length > 0 && series && !isLoading && (
             <LineChart
               h={300}
-              data={chartWorkoutRecord}
+              data={charts}
               dataKey="date"
               series={series}
               curveType="linear"

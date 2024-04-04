@@ -6,13 +6,14 @@ import {
   ActionFunctionArgs,
   json,
 } from "@vercel/remix";
+import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
   if (user.data.user) {
-    return redirect("/");
+    return redirect(links.home);
   }
   return null;
 }
@@ -27,9 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
     email,
     password,
     options: {
-      emailRedirectTo: isLocal
-        ? "http://localhost:3000"
-        : "https://gym-ysm0706glee.vercel.app",
+      emailRedirectTo: isLocal ? links.url.local : links.url.production,
     },
   });
   if (error) {

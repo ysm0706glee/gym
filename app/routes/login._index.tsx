@@ -7,6 +7,7 @@ import {
   json,
 } from "@vercel/remix";
 import { z } from "zod";
+import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 
 const loginWithPasswordSchema = z.object({
@@ -18,7 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
   if (user.data.user) {
-    return redirect("/");
+    return redirect(links.home);
   }
   return null;
 }
@@ -33,8 +34,8 @@ export async function action({ request }: ActionFunctionArgs) {
       provider: "google",
       options: {
         redirectTo: isLocal
-          ? "http://localhost:3000/auth/callback"
-          : "https://gym-ysm0706glee.vercel.app/auth/callback",
+          ? `${links.url.local}${links.authCallback}`
+          : `${links.url.production}${links.authCallback}`,
       },
     });
     if (error) {
@@ -56,7 +57,7 @@ export async function action({ request }: ActionFunctionArgs) {
     if (error) {
       return json({ error }, { headers });
     }
-    return redirect("/", { headers });
+    return redirect(links.home, { headers });
   }
 }
 
@@ -104,7 +105,7 @@ export default function Login() {
           Login
         </Button>
       </Form>
-      <Link style={{ color: "#fff" }} to="/signup">
+      <Link style={{ color: "#fff" }} to={links.signUp}>
         Sign Up
       </Link>
       {actionResponse?.error && <Text>Login failed</Text>}

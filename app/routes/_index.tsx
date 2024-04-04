@@ -1,27 +1,28 @@
 import { List, Text } from "@mantine/core";
 import { Link } from "@remix-run/react";
 import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
+import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
-  if (!user.data.user) return redirect("/login");
+  if (!user.data.user) return redirect(links.login);
   return null;
 }
 
 export default function Home() {
   const LINKS = [
     {
-      href: "/record",
+      href: links.record,
       label: "Start Workout",
     },
     {
-      href: "/workout_menus",
+      href: links.menus,
       label: "Manage workout menus",
     },
     {
-      href: "/progress/chart",
+      href: links.chart,
       label: "View progress",
     },
   ];

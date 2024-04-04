@@ -8,6 +8,7 @@ import {
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
+import { links } from "~/lib/links";
 
 const createSchema = z.object({
   exercise: z.string(),
@@ -16,22 +17,22 @@ const createSchema = z.object({
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
-  if (!user.data.user) return redirect("/login");
-  const workoutMenuId = Number(params.id);
-  if (!workoutMenuId) {
-    return redirect("/workout_menus");
+  if (!user.data.user) return redirect(links.login);
+  const menuId = Number(params.id);
+  if (!menuId) {
+    return redirect(links.menus);
   }
-  const { data: workoutMenu } = await supabaseClient
-    .from("workout_menus")
+  const { data: menu } = await supabaseClient
+    .from("menus")
     .select("name")
-    .eq("id", workoutMenuId)
+    .eq("id", menuId)
     .single();
   const { data: exercises, error } = await supabaseClient
-    .from("workout_menus_exercises")
+    .from("menus_exercises")
     .select("exercises (id, name)")
-    .eq("workout_menus_id", workoutMenuId);
+    .eq("menu_id", menuId);
   if (error) new Response("Not Found", { status: 404 });
-  return { workoutMenu, exercises };
+  return { menu, exercises };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -39,16 +40,16 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const body = await request.formData();
   const { _action, ...value } = Object.fromEntries(body);
   const url = new URL(request.url);
-  const workoutMenuId = Number(params.id);
-  if (!workoutMenuId) return redirect("/workout_menus");
+  const menuId = Number(params.id);
+  if (!menuId) return redirect(links.menus);
   if (_action === "delete") {
     const exercisesId = Number(value.exercisesId);
     // only delete form workout_menus_exercises table not from exercises table
     const { error } = await supabaseClient
-      .from("workout_menus_exercises")
+      .from("menus_exercises")
       .delete()
-      .eq("workout_menus_id", workoutMenuId)
-      .eq("exercises_id", exercisesId)
+      .eq("menu_id", menuId)
+      .eq("exercise_id", exercisesId)
       .select();
     if (error) {
       return json({ error }, { headers });
@@ -60,6 +61,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     if (!parsed.success) {
       return json({ error: parsed.error.format() });
     }
+    // TODO: format exerciseName
     const exerciseName = parsed.data.exercise;
     const { data: existingExercises } = await supabaseClient
       .from("exercises")
@@ -77,11 +79,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
     } else {
       exerciseId = existingExercises.id;
     }
+    // TODO: duplicate check
     const { error } = await supabaseClient
-      .from("workout_menus_exercises")
+      .from("menus_exercises")
       .insert({
-        workout_menus_id: workoutMenuId,
-        exercises_id: exerciseId,
+        menu_id: menuId,
+        exercise_id: exerciseId,
       })
       .select();
     if (error) {
@@ -91,14 +94,14 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 }
 
-const WorkoutMenu = () => {
-  const { workoutMenu, exercises } = useLoaderData<typeof loader>();
+export default function Menu() {
+  const { menu, exercises } = useLoaderData<typeof loader>();
   const actionResponse = useActionData<typeof action>();
 
   return (
     <div>
       <Text style={{ paddingBottom: "1rem" }} size="lg">
-        {workoutMenu?.name}
+        {menu?.name}
       </Text>
       <List
         style={{
@@ -155,6 +158,4 @@ const WorkoutMenu = () => {
       {actionResponse?.error && <Text>Failed</Text>}
     </div>
   );
-};
-
-export default WorkoutMenu;
+}
