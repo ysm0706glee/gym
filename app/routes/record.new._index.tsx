@@ -26,7 +26,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .from("menus_exercises")
       .select("exercises (id, name)")
       .eq("menu_id", menuId);
-    console.log("data: ", data);
     if (error) throw error;
     for (const menu of data) {
       if (menu.exercises) {
