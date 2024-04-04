@@ -23,12 +23,12 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
-  const isLocal = process.env.NODE_ENV === "development";
+  const isProduction = process.env.VERCEL_ENV === "production";
   const { error } = await supabaseClient.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: isLocal ? links.url.local : links.url.production,
+      emailRedirectTo: isProduction ? links.url.production : links.url.local,
     },
   });
   if (error) {
