@@ -1,6 +1,7 @@
 import { Tabs } from "@mantine/core";
 import { useNavigate } from "@remix-run/react";
 import { ReactNode } from "react";
+import { links } from "~/lib/links";
 
 type Props = {
   defaultValue: string;
@@ -14,7 +15,7 @@ export default function ProgressTab(props: Props) {
     <Tabs
       color="violet"
       defaultValue={props.defaultValue}
-      onChange={(value) => navigate(`/progress/${value}`)}
+      onChange={(value) => navigate(`${links.progress}/${value}`)}
     >
       <Tabs.List>
         <Tabs.Tab value="chart">Chart</Tabs.Tab>

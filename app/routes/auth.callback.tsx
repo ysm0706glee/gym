@@ -1,4 +1,5 @@
 import { type LoaderFunctionArgs, redirect } from "@vercel/remix";
+import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -9,18 +10,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (code) {
     const { error } = await supabaseClient.auth.exchangeCodeForSession(code);
     if (!error) {
-      return redirect(
-        isLocal
-          ? "http://localhost:3000"
-          : "https://gym-ysm0706glee.vercel.app",
-        { headers }
-      );
+      return redirect(isLocal ? links.url.local : links.url.production, {
+        headers,
+      });
     }
   }
   return redirect(
     isLocal
-      ? "http://localhost:3000/login"
-      : "https://gym-ysm0706glee.vercel.app/login",
+      ? `${links.url.local}${links.login}`
+      : `${links.url.production}${links.login}`,
     { headers }
   );
 }
