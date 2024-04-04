@@ -1,5 +1,5 @@
 import { Button, PasswordInput, Text, TextInput } from "@mantine/core";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import {
   type LoaderFunctionArgs,
   redirect,
@@ -21,7 +21,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (user.data.user) {
     return redirect(links.home);
   }
-  return null;
+  const test = process.env.VERCEL_ENV === "production";
+  return { test };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -62,6 +63,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Login() {
+  const { test } = useLoaderData<typeof loader>();
+  console.log("LOOK: ", test);
   const actionResponse = useActionData<typeof action>();
 
   return (
