@@ -7,7 +7,7 @@ export type Record = {
   weight: number;
 };
 
-export type WorkoutRecords = {
+export type Records = {
   [exerciseName: string]: {
     id: number;
     records: Record[];
@@ -21,7 +21,7 @@ export type Chart = {
 };
 
 export const FormDataEntrySchema = z.object({
-  exercises_id: z.string(),
+  exercise_id: z.string(),
   sets: z.string(),
   type: z.union([z.literal("reps"), z.literal("weight")]),
   value: z.string(),
@@ -30,9 +30,9 @@ export const FormDataEntrySchema = z.object({
 export type FormDataEntry = z.infer<typeof FormDataEntrySchema>;
 
 export const ParsedFormDataSchema = z.object({
-  workout_menus_id: z.number(),
+  menu_id: z.number(),
   date: z.string(),
-  exercises_id: z.number(),
+  exercise_id: z.number(),
   sets: z.number(),
   reps: z.number(),
   weight: z.number(),
