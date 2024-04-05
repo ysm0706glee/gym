@@ -6,8 +6,9 @@ import {
   redirect,
 } from "@vercel/remix";
 import type { FormDataEntry, Records } from "~/types/workoutRecord";
-import { NumberInput, Button, Text } from "@mantine/core";
-import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { NumberInput, Button, Text, Modal } from "@mantine/core";
+import { useRef, useState } from "react";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { parseFormData } from "~/lib/records";
 import { formateDate } from "~/lib/date";
@@ -93,7 +94,11 @@ export default function WorkoutRecord() {
   const { records } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   const [recordsState, setRecordsState] = useState(records);
+
+  const [opened, { open, close }] = useDisclosure(false);
 
   const addRecord = (exerciseName: string) => {
     const currentRecords = recordsState[exerciseName];
@@ -136,12 +141,19 @@ export default function WorkoutRecord() {
     });
   };
 
+  const handleSubmit = () => {
+    if (formRef.current) {
+      formRef.current.submit();
+      close();
+    }
+  };
+
   return (
     <div>
       {data?.message ? (
         <Text size="lg">Good job!</Text>
       ) : (
-        <Form method="post">
+        <Form method="post" ref={formRef}>
           {Object.entries(recordsState).map(
             ([exerciseName, { id, records }]) => (
               <div
@@ -193,10 +205,21 @@ export default function WorkoutRecord() {
             )
           )}
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <Button type="submit" variant="white" color="gray">
+            <Button variant="white" color="gray" onClick={open}>
               Save
             </Button>
           </div>
+          <Modal
+            opened={opened}
+            onClose={close}
+            title="Are you sure you want to submit these records?"
+          >
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Button variant="white" color="gray" onClick={handleSubmit}>
+                Yes
+              </Button>
+            </div>
+          </Modal>
         </Form>
       )}
     </div>
