@@ -40,7 +40,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         if (recordsError) throw recordsError;
         const defaultReps = recordsData[0]?.reps || 8;
         // FIXME: default weight should be the last record's weight
-        const defaultWeight = recordsData[0]?.weight || 0;
+        const defaultWeight = recordsData[0]?.weight;
         records[exerciseName] = {
           id: exerciseId,
           records: [
@@ -118,7 +118,7 @@ export default function WorkoutRecord() {
     exerciseName: string,
     setId: number,
     field: "reps" | "weight",
-    value: number
+    value: string | number
   ) => {
     const currentRecords = recordsState[exerciseName];
     const updatedRecords = currentRecords.records.map((record, index) => {
@@ -169,7 +169,7 @@ export default function WorkoutRecord() {
                       label="Reps"
                       value={record.reps}
                       onChange={(value) =>
-                        updateRecord(exerciseName, index, "reps", Number(value))
+                        updateRecord(exerciseName, index, "reps", value)
                       }
                     />
                     <NumberInput
@@ -177,12 +177,7 @@ export default function WorkoutRecord() {
                       label="Weight(kg)"
                       value={record.weight}
                       onChange={(value) =>
-                        updateRecord(
-                          exerciseName,
-                          index,
-                          "weight",
-                          Number(value)
-                        )
+                        updateRecord(exerciseName, index, "weight", value)
                       }
                     />
                   </div>
