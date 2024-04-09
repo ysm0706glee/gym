@@ -10,7 +10,11 @@
     "typecheck": "tsc",
     "format": "biome format .",
     "lint": "biome lint .",
-    "check": "biome check --apply ."
+    "check": "biome check --apply .",
+    "supabase:start": "npx supabase start",
+    "supabase:stop": "npx supabase stop",
+    "supabase:reset": "npx supabase reset",
+    "supabase:type": "npx supabase gen types typescript --local > app/types/supabase.ts"
   },
   "dependencies": {
     "@mantine/charts": "^7.6.2",

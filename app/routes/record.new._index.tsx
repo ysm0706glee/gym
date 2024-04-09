@@ -21,17 +21,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect(links.login);
+  const { data: menu } = await supabaseClient
+    .from("menus")
+    .select("name, memo")
+    .eq("id", menuId)
+    .single();
   const records: Records = {};
   try {
     const { data, error } = await supabaseClient
       .from("menus_exercises")
-      .select("exercises (id, name)")
+      .select("exercises (id, name, memo)")
       .eq("menu_id", menuId);
     if (error) throw error;
     for (const menu of data) {
       if (menu.exercises) {
         const exerciseId = menu.exercises.id;
         const exerciseName = menu.exercises.name;
+        const memo = menu.exercises.memo;
         const { data: recordsData, error: recordsError } = await supabaseClient
           .from("records")
           .select("reps, weight")
@@ -52,12 +58,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
             },
           ],
         };
+        if (memo) {
+          records[exerciseName].memo = memo;
+        }
       }
     }
   } catch (error) {
     console.error(error);
   }
-  return { records };
+  return { menu, records };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -91,7 +100,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function WorkoutRecord() {
-  const { records } = useLoaderData<typeof loader>();
+  const { menu, records } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -153,74 +162,79 @@ export default function WorkoutRecord() {
       {data?.message ? (
         <Text size="lg">Good job!</Text>
       ) : (
-        <Form method="post" ref={formRef}>
-          {Object.entries(recordsState).map(
-            ([exerciseName, { id, records }]) => (
-              <div
-                key={id}
-                style={{
-                  marginBottom: "2rem",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                }}
-              >
-                <Text size="lg">{exerciseName}</Text>
-                {records.map((record, index) => (
-                  <div
-                    key={`${record.id}-${index}`}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "1rem",
-                    }}
-                  >
-                    <Text>{index + 1} sets</Text>
-                    <NumberInput
-                      name={`${id}-${index + 1}-reps`}
-                      label="Reps"
-                      value={record.reps}
-                      onChange={(value) =>
-                        updateRecord(exerciseName, index, "reps", value)
-                      }
-                    />
-                    <NumberInput
-                      name={`${id}-${index + 1}-weight`}
-                      label="Weight(kg)"
-                      value={record.weight}
-                      onChange={(value) =>
-                        updateRecord(exerciseName, index, "weight", value)
-                      }
-                    />
-                  </div>
-                ))}
-                <Button
-                  variant="filled"
-                  color="gray"
-                  onClick={() => addRecord(exerciseName)}
+        <>
+          <Text size="lg">{menu?.name}</Text>
+          <Text size="sm">{menu?.memo}</Text>
+          <Form method="post" ref={formRef}>
+            {Object.entries(recordsState).map(
+              ([exerciseName, { id, memo, records }]) => (
+                <div
+                  key={id}
+                  style={{
+                    marginBottom: "2rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                  }}
                 >
-                  Add Record
-                </Button>
-              </div>
-            )
-          )}
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Button variant="white" color="gray" onClick={open}>
-              Save
-            </Button>
-          </div>
-          <Modal
-            opened={opened}
-            onClose={close}
-            title="Are you sure you want to submit these records?"
-          >
+                  <Text size="lg">{exerciseName}</Text>
+                  {memo ?? <Text size="sm">{memo}</Text>}
+                  {records.map((record, index) => (
+                    <div
+                      key={`${record.id}-${index}`}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "1rem",
+                      }}
+                    >
+                      <Text>{index + 1} sets</Text>
+                      <NumberInput
+                        name={`${id}-${index + 1}-reps`}
+                        label="Reps"
+                        value={record.reps}
+                        onChange={(value) =>
+                          updateRecord(exerciseName, index, "reps", value)
+                        }
+                      />
+                      <NumberInput
+                        name={`${id}-${index + 1}-weight`}
+                        label="Weight(kg)"
+                        value={record.weight}
+                        onChange={(value) =>
+                          updateRecord(exerciseName, index, "weight", value)
+                        }
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    variant="filled"
+                    color="gray"
+                    onClick={() => addRecord(exerciseName)}
+                  >
+                    Add Record
+                  </Button>
+                </div>
+              )
+            )}
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <Button variant="white" color="gray" onClick={handleSubmit}>
-                Yes
+              <Button variant="white" color="gray" onClick={open}>
+                Save
               </Button>
             </div>
-          </Modal>
-        </Form>
+            <Modal
+              opened={opened}
+              onClose={close}
+              title="Are you sure you want to submit these records?"
+            >
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <Button variant="white" color="gray" onClick={handleSubmit}>
+                  Yes
+                </Button>
+              </div>
+            </Modal>
+          </Form>
+        </>
       )}
     </div>
   );
