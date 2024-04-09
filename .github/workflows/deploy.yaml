@@ -24,4 +24,6 @@ jobs:
         with:
           version: latest
 
-      - run: supabase db push --project-ref vpwxoiplqgkqcbruwrbu
+      - run: supabase link --project-ref vpwxoiplqgkqcbruwrbu
+
+      - run: supabase db push
