@@ -10,6 +10,7 @@ export type Record = {
 export type Records = {
   [exerciseName: string]: {
     id: number;
+    memo?: string;
     records: Record[];
   };
 };
