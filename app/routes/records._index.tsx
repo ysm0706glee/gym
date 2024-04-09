@@ -1,6 +1,6 @@
 import { useLoaderData } from "@remix-run/react";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
-import { List } from "@mantine/core";
+import { List, Text } from "@mantine/core";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { formateRecords } from "~/lib/records";
 import { links } from "~/lib/links";
@@ -14,18 +14,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (!user.data.user) return redirect(links.login);
   const { data, error } = await supabaseClient
     .from("records")
-    .select("*, exercises (*)")
+    .select("*, exercises (*), menus (id, name)")
     .eq("date", date);
   if (error) throw error;
+  const menu = data[0].menus?.name;
   const records = formateRecords(data);
-  return { records };
+  return { menu, records };
 }
 
 export default function Records() {
-  const { records } = useLoaderData<typeof loader>();
+  const { menu, records } = useLoaderData<typeof loader>();
 
   return (
     <div>
+      <Text>{menu}</Text>
       <List style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {Object.entries(records).map(([name, { id, records }]) => (
           <List.Item key={id}>
