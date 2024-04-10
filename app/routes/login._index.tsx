@@ -29,14 +29,10 @@ export async function action({ request }: ActionFunctionArgs) {
   const body = await request.formData();
   const { _action, ...value } = Object.fromEntries(body);
   if (_action === "login-with-google") {
-    const isProduction = process.env.VERCEL_ENV === "production";
+    const url = new URL(request.url);
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: isProduction
-          ? `${links.url.production}${links.authCallback}`
-          : `${links.url.local}${links.authCallback}`,
-      },
+      options: { redirectTo: `${url.origin}${links.authCallback}` },
     });
     if (error) {
       return json({ error }, { headers });
