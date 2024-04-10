@@ -23,12 +23,12 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
-  const isProduction = process.env.VERCEL_ENV === "production";
+  const url = new URL(request.url);
   const { error } = await supabaseClient.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: isProduction ? links.url.production : links.url.local,
+      emailRedirectTo: url.origin,
     },
   });
   if (error) {

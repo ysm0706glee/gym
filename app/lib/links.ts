@@ -10,8 +10,4 @@ export const links = {
   login: "/login",
   signUp: "/sign-up",
   authCallback: "/auth/callback",
-  url: {
-    local: "http://localhost:3000",
-    production: "https://gym-ysm0706glee.vercel.app",
-  },
 } as const;
