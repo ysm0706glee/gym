@@ -16,6 +16,10 @@ const createSchema = z.object({
   memo: z.string().optional(),
 });
 
+const deleteSchema = z.object({
+  menuId: z.string().transform((value) => parseInt(value, 10)),
+});
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
@@ -25,32 +29,48 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const body = await request.formData();
-  const value = Object.fromEntries(body);
-  const parsed = createSchema.safeParse(value);
-  if (!parsed.success) {
-    return json({ error: parsed.error.format() });
-  }
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect(links.login);
-  const userId = user.data.user?.id;
-  const name = parsed.data.menu;
-  const insertData: {
-    name: string;
-    memo?: string;
-    user_id: string;
-  } = { name, user_id: userId };
-  const memo = parsed.data.memo;
-  if (memo) {
-    insertData.memo = memo;
+  const body = await request.formData();
+  const { _action, ...value } = Object.fromEntries(body);
+  if (_action === "create") {
+    const parsed = createSchema.safeParse(value);
+    if (!parsed.success) {
+      return json({ error: parsed.error.format() });
+    }
+    const userId = user.data.user?.id;
+    const name = parsed.data.menu;
+    const insertData: {
+      name: string;
+      memo?: string;
+      user_id: string;
+    } = { name, user_id: userId };
+    const memo = parsed.data.memo;
+    if (memo) {
+      insertData.memo = memo;
+    }
+    const { data, error } = await supabaseClient
+      .from("menus")
+      .insert(insertData)
+      .select();
+    if (error) throw new Error(error.message);
+    return redirect(`${links.menus}/${data[0].id}`);
   }
-  const { data, error } = await supabaseClient
-    .from("menus")
-    .insert(insertData)
-    .select();
-  if (error) throw new Error(error.message);
-  return redirect(`${links.menus}/${data[0].id}`);
+  if (_action === "delete") {
+    const parsed = deleteSchema.safeParse(value);
+    if (!parsed.success) {
+      return json({ error: parsed.error.format() });
+    }
+    const menuId = parsed.data.menuId;
+    const { error } = await supabaseClient.rpc("delete_menu", {
+      menuid: menuId,
+    });
+    if (error) {
+      return json({ status: "fail", error: error.message });
+    }
+    return null;
+  }
 }
 
 export default function Menus() {
@@ -79,6 +99,25 @@ export default function Menus() {
                 {menu.memo}
               </Text>
             </Link>
+            <Form
+              method="post"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <input type="hidden" name="menuId" value={menu.id} />
+              <Button
+                type="submit"
+                name="_action"
+                value="delete"
+                variant="transparent"
+                color="red"
+              >
+                ×
+              </Button>
+            </Form>
           </List.Item>
         ))}
       </List>
@@ -93,7 +132,13 @@ export default function Menus() {
         >
           <TextInput name="menu" label="menu name" withAsterisk required />
           <Textarea name="memo" label="memo" />
-          <Button type="submit" variant="white" color="gray">
+          <Button
+            type="submit"
+            name="_action"
+            value="create"
+            variant="white"
+            color="gray"
+          >
             Add
           </Button>
         </Form>
