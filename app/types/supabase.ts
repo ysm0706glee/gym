@@ -36,16 +36,19 @@ export interface Database {
     Tables: {
       exercises: {
         Row: {
+          created_at: string | null
           id: number
           memo: string | null
           name: string
         }
         Insert: {
+          created_at?: string | null
           id?: never
           memo?: string | null
           name: string
         }
         Update: {
+          created_at?: string | null
           id?: never
           memo?: string | null
           name?: string
@@ -54,18 +57,21 @@ export interface Database {
       }
       menus: {
         Row: {
+          created_at: string | null
           id: number
           memo: string | null
           name: string
           user_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: never
           memo?: string | null
           name: string
           user_id: string
         }
         Update: {
+          created_at?: string | null
           id?: never
           memo?: string | null
           name?: string
@@ -82,16 +88,19 @@ export interface Database {
       }
       menus_exercises: {
         Row: {
+          created_at: string | null
           exercise_id: number
           id: number
           menu_id: number
         }
         Insert: {
+          created_at?: string | null
           exercise_id: number
           id?: never
           menu_id: number
         }
         Update: {
+          created_at?: string | null
           exercise_id?: number
           id?: never
           menu_id?: number
@@ -113,6 +122,7 @@ export interface Database {
       }
       records: {
         Row: {
+          created_at: string | null
           date: string
           exercise_id: number
           id: number
@@ -123,6 +133,7 @@ export interface Database {
           weight: number
         }
         Insert: {
+          created_at?: string | null
           date: string
           exercise_id: number
           id?: never
@@ -133,6 +144,7 @@ export interface Database {
           weight: number
         }
         Update: {
+          created_at?: string | null
           date?: string
           exercise_id?: number
           id?: never
@@ -162,7 +174,12 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_menu: {
+        Args: {
+          menuid: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
