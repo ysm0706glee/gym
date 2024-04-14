@@ -13,7 +13,7 @@
     "check": "biome check --apply .",
     "supabase:start": "npx supabase start",
     "supabase:stop": "npx supabase stop",
-    "supabase:reset": "npx supabase reset",
+    "supabase:reset": "npx supabase db reset",
     "supabase:type": "npx supabase gen types typescript --local > app/types/supabase.ts"
   },
   "dependencies": {
