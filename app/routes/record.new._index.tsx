@@ -40,13 +40,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
         const memo = menu.exercises.memo;
         const { data: recordsData, error: recordsError } = await supabaseClient
           .from("records")
-          .select("reps, weight")
+          .select("sets, reps, weight")
           .eq("exercise_id", exerciseId)
-          // .order("created_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .order("sets", { ascending: false })
           .limit(1);
         if (recordsError) throw recordsError;
         const defaultReps = recordsData[0]?.reps || 8;
-        // FIXME: default weight should be the last record's weight
         const defaultWeight = recordsData[0]?.weight;
         records[exerciseName] = {
           id: exerciseId,
@@ -128,6 +128,20 @@ export default function WorkoutRecord() {
     });
   };
 
+  const deleteRecord = (exerciseName: string, setId: number) => {
+    const currentRecords = recordsState[exerciseName];
+    const filteredRecords = currentRecords.records.filter(
+      (_, index) => index !== setId
+    );
+    setRecordsState({
+      ...recordsState,
+      [exerciseName]: {
+        ...currentRecords,
+        records: filteredRecords,
+      },
+    });
+  };
+
   const updateRecord = (
     exerciseName: string,
     setId: number,
@@ -188,7 +202,22 @@ export default function WorkoutRecord() {
                         gap: "1rem",
                       }}
                     >
-                      <Text>{index + 1} sets</Text>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text>{index + 1} sets</Text>
+                        <Button
+                          variant="transparent"
+                          color="red"
+                          onClick={() => deleteRecord(exerciseName, index)}
+                        >
+                          ×
+                        </Button>
+                      </div>
                       <NumberInput
                         name={`${id}-${index + 1}-reps`}
                         label="Reps"
