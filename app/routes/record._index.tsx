@@ -1,5 +1,5 @@
 import { Radio, Text } from "@mantine/core";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { Link, useLoaderData, useNavigate } from "@remix-run/react";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
@@ -8,7 +8,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
   if (!user.data.user) return redirect(links.login);
-  const menus = await supabaseClient.from("menus").select("*");
+  const { data: menus } = await supabaseClient.from("menus").select("*");
   return { menus };
 }
 
@@ -23,7 +23,7 @@ export default function Record() {
         Select work menu
       </Text>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {menus.data?.map((menu) => (
+        {menus?.map((menu) => (
           <Radio
             key={menu.id}
             name="menu"
@@ -34,6 +34,14 @@ export default function Record() {
           />
         ))}
       </div>
+      {menus?.length === 0 && (
+        <>
+          <Text>No menus</Text>
+          <Link style={{ color: "#fff" }} to={links.menus}>
+            Create new menu
+          </Link>
+        </>
+      )}
     </div>
   );
 }
