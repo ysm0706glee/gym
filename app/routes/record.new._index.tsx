@@ -7,8 +7,8 @@ import {
 } from "@vercel/remix";
 import type { FormDataEntry, Records } from "~/types/workoutRecord";
 import { useDisclosure } from "@mantine/hooks";
-import { NumberInput, Button, Text, Modal } from "@mantine/core";
-import { useRef, useState } from "react";
+import { NumberInput, Button, Text, Modal, Group } from "@mantine/core";
+import { FormEvent, useRef, useState } from "react";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { parseFormData } from "~/lib/records";
 import { formateDate } from "~/lib/date";
@@ -164,7 +164,8 @@ export default function WorkoutRecord() {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
     if (formRef.current) {
       formRef.current.submit();
       close();
@@ -202,22 +203,18 @@ export default function WorkoutRecord() {
                         gap: "1rem",
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Text>{index + 1} sets</Text>
-                        <Button
-                          variant="transparent"
-                          color="red"
-                          onClick={() => deleteRecord(exerciseName, index)}
-                        >
-                          ×
-                        </Button>
-                      </div>
+                      {index !== 0 && (
+                        <Group>
+                          <Text>{index + 1} sets</Text>
+                          <Button
+                            variant="transparent"
+                            color="red"
+                            onClick={() => deleteRecord(exerciseName, index)}
+                          >
+                            ×
+                          </Button>
+                        </Group>
+                      )}
                       <NumberInput
                         name={`${id}-${index + 1}-reps`}
                         label="Reps"
