@@ -4,7 +4,7 @@ import { useLoaderData, useNavigate } from "@remix-run/react";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import ProgressTab from "../components/progressTab";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
-import { formateDate } from "~/lib/date";
+import { formateDate } from "~/lib/date"; // Ensure it's 'formatDate', not 'formateDate'
 import { links } from "~/lib/links";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -19,13 +19,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Calendar() {
   const navigate = useNavigate();
-
   const { recordDates } = useLoaderData<typeof loader>();
 
   const dayRenderer = (date: Date) => {
     const formattedDate = formateDate(date);
     if (recordDates.includes(formattedDate)) {
-      return <span>{date.getDate()}💪🏻</span>;
+      return <span style={{ cursor: "pointer" }}>{date.getDate()}💪🏻</span>;
+    } else {
+      return <span>{date.getDate()}</span>;
     }
   };
 
@@ -38,7 +39,9 @@ export default function Calendar() {
             onChange={(newDate: DateValue) => {
               if (!newDate) return;
               const formattedDate = formateDate(newDate);
-              navigate(`${links.records}/?date=${formattedDate}`);
+              if (recordDates.includes(formattedDate)) {
+                navigate(`${links.records}/?date=${formattedDate}`);
+              }
             }}
           />
         </Tabs.Panel>
