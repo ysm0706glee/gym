@@ -1,5 +1,13 @@
 import { useDisclosure } from "@mantine/hooks";
-import { Button, List, Text, TextInput, Textarea, Modal } from "@mantine/core";
+import {
+  Button,
+  List,
+  Text,
+  TextInput,
+  Textarea,
+  Modal,
+  Group,
+} from "@mantine/core";
 import { Form, Link, useLoaderData } from "@remix-run/react";
 import {
   LoaderFunctionArgs,
@@ -93,31 +101,26 @@ export default function Menus() {
       >
         {menus?.map((menu) => (
           <List.Item key={menu.id}>
-            <Link style={{ color: "#fff" }} to={`${links.menus}/${menu.id}`}>
-              <Text>{menu.name}</Text>
-              <Text size="sm" style={{ wordBreak: "break-all" }}>
-                {menu.memo}
-              </Text>
-            </Link>
-            <Form
-              method="post"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <input type="hidden" name="menuId" value={menu.id} />
-              <Button
-                type="submit"
-                name="_action"
-                value="delete"
-                variant="transparent"
-                color="red"
-              >
-                ×
-              </Button>
-            </Form>
+            <Group justify="space-between">
+              <Link style={{ color: "#fff" }} to={`${links.menus}/${menu.id}`}>
+                <Text>{menu.name}</Text>
+                <Text size="sm" style={{ wordBreak: "break-all" }}>
+                  {menu.memo}
+                </Text>
+              </Link>
+              <Form method="post">
+                <input type="hidden" name="menuId" value={menu.id} />
+                <Button
+                  type="submit"
+                  name="_action"
+                  value="delete"
+                  variant="transparent"
+                  color="red"
+                >
+                  ×
+                </Button>
+              </Form>
+            </Group>
           </List.Item>
         ))}
       </List>

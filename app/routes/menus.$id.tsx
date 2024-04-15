@@ -7,6 +7,7 @@ import {
   Modal,
   Textarea,
   Title,
+  Group,
 } from "@mantine/core";
 import {
   type LoaderFunctionArgs,
@@ -129,34 +130,29 @@ export default function Menu() {
         }}
       >
         {exercises?.map((exercise) => (
-          <List.Item key={exercise.exercises?.id}>
-            <Form
-              method="post"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Text>{exercise.exercises?.name}</Text>
-              <input
-                type="hidden"
-                name="exercisesId"
-                value={exercise.exercises?.id}
-              />
-              <Button
-                type="submit"
-                name="_action"
-                value="delete"
-                variant="transparent"
-                color="red"
-              >
-                ×
-              </Button>
-            </Form>
-            <Text size="sm" style={{ wordBreak: "break-all" }}>
-              {exercise.exercises?.memo}
-            </Text>
+          <List.Item key={exercise.exercises?.id} style={{ width: "100%" }}>
+            <Group justify="space-between">
+              <Form method="post">
+                <Text>{exercise.exercises?.name}</Text>
+                <input
+                  type="hidden"
+                  name="exercisesId"
+                  value={exercise.exercises?.id}
+                />
+                <Button
+                  type="submit"
+                  name="_action"
+                  value="delete"
+                  variant="transparent"
+                  color="red"
+                >
+                  ×
+                </Button>
+              </Form>
+              <Text size="sm" style={{ wordBreak: "break-all" }}>
+                {exercise.exercises?.memo}
+              </Text>
+            </Group>
           </List.Item>
         ))}
       </List>
