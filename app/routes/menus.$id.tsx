@@ -26,6 +26,10 @@ const createSchema = z.object({
   memo: z.string().optional(),
 });
 
+const deleteSchema = z.object({
+  exercisesId: z.string().transform((value) => parseInt(value, 10)),
+});
+
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { supabaseClient } = createSupabaseServerClient(request);
   const user = await supabaseClient.auth.getUser();
@@ -53,23 +57,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const { _action, ...value } = Object.fromEntries(body);
   const menuId = Number(params.id);
   if (!menuId) return redirect(links.menus);
-  if (_action === "delete") {
-    const exercisesId = Number(value.exercisesId);
-    const { error } = await supabaseClient
-      .from("menus_exercises")
-      .delete()
-      .eq("menu_id", menuId)
-      .eq("exercise_id", exercisesId)
-      .select();
-    if (error) {
-      return json({ status: "fail", error: error.message });
-    }
-    return null;
-  }
   if (_action === "create") {
     const parsed = createSchema.safeParse(value);
     if (!parsed.success) {
-      return json({ status: "fail", error: parsed.error.format() });
+      return json({ status: "failed", error: parsed.error.format() });
     }
     const exerciseName = parsed.data.exercise;
     const insertData: {
@@ -80,13 +71,13 @@ export async function action({ request, params }: ActionFunctionArgs) {
     if (memo) {
       insertData.memo = memo;
     }
-    // TODO: format exerciseName
     const { data, error: exercisesError } = await supabaseClient
       .from("exercises")
       .insert(insertData)
       .select();
     if (exercisesError) {
-      return json({ status: "fail", error: exercisesError.message });
+      console.error(exercisesError.message);
+      return json({ status: "failed" });
     }
     const exerciseId = data[0].id;
     const { error: menusExercisesError } = await supabaseClient
@@ -97,7 +88,26 @@ export async function action({ request, params }: ActionFunctionArgs) {
       })
       .select();
     if (menusExercisesError) {
-      return json({ status: "fail", error: menusExercisesError.message });
+      console.error(menusExercisesError.message);
+      return json({ status: "failed", error: menusExercisesError.message });
+    }
+    return json({ status: "success" });
+  }
+  if (_action === "delete") {
+    const parsed = deleteSchema.safeParse(value);
+    if (!parsed.success) {
+      return json({ status: "failed", error: parsed.error.format() });
+    }
+    const exercisesId = Number(parsed.data.exercisesId);
+    const { error } = await supabaseClient
+      .from("menus_exercises")
+      .delete()
+      .eq("menu_id", menuId)
+      .eq("exercise_id", exercisesId)
+      .select();
+    if (error) {
+      console.error(error);
+      return json({ status: "failed", error: error.message });
     }
     return json({ status: "success" });
   }
@@ -130,9 +140,9 @@ export default function Menu() {
         }}
       >
         {exercises?.map((exercise) => (
-          <List.Item key={exercise.exercises?.id} style={{ width: "100%" }}>
-            <Group justify="space-between">
-              <Form method="post">
+          <List.Item key={exercise.exercises?.id}>
+            <Form method="post">
+              <Group justify="space-between">
                 <Text>{exercise.exercises?.name}</Text>
                 <input
                   type="hidden"
@@ -148,11 +158,11 @@ export default function Menu() {
                 >
                   ×
                 </Button>
-              </Form>
-              <Text size="sm" style={{ wordBreak: "break-all" }}>
-                {exercise.exercises?.memo}
-              </Text>
-            </Group>
+              </Group>
+            </Form>
+            <Text size="sm" style={{ wordBreak: "break-all" }}>
+              {exercise.exercises?.memo}
+            </Text>
           </List.Item>
         ))}
       </List>
@@ -182,7 +192,7 @@ export default function Menu() {
           </Button>
         </Form>
       </Modal>
-      {actionResponse?.status === "fail" && <Text>Failed</Text>}
+      {actionResponse?.status === "failed" && <Text>Failed</Text>}
     </div>
   );
 }

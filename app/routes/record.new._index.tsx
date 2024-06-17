@@ -93,7 +93,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const records = parseFormData(formData, menuId, date);
     const { error } = await supabaseClient.from("records").insert(records);
     if (error) throw error;
-    return json({ message: "success" });
+    return json({ status: "success" });
   } catch (error) {
     console.error(error);
   }
@@ -101,7 +101,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function WorkoutRecord() {
   const { menu, records } = useLoaderData<typeof loader>();
-  const data = useActionData<typeof action>();
+  const actionResponse = useActionData<typeof action>();
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -174,7 +174,7 @@ export default function WorkoutRecord() {
 
   return (
     <div>
-      {data?.message ? (
+      {actionResponse?.status === "success" ? (
         <Text size="lg">Good job!</Text>
       ) : (
         <>

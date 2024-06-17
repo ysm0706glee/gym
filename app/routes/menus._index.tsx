@@ -8,7 +8,7 @@ import {
   Modal,
   Group,
 } from "@mantine/core";
-import { Form, Link, useLoaderData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import {
   LoaderFunctionArgs,
   ActionFunctionArgs,
@@ -45,7 +45,8 @@ export async function action({ request }: ActionFunctionArgs) {
   if (_action === "create") {
     const parsed = createSchema.safeParse(value);
     if (!parsed.success) {
-      return json({ error: parsed.error.format() });
+      console.error(parsed.error.format());
+      return json({ status: "failed" });
     }
     const userId = user.data.user?.id;
     const name = parsed.data.menu;
@@ -68,21 +69,25 @@ export async function action({ request }: ActionFunctionArgs) {
   if (_action === "delete") {
     const parsed = deleteSchema.safeParse(value);
     if (!parsed.success) {
-      return json({ error: parsed.error.format() });
+      console.error(parsed.error.format());
+      return json({ status: "failed" });
     }
     const menuId = parsed.data.menuId;
     const { error } = await supabaseClient.rpc("delete_menu", {
       menuid: menuId,
     });
     if (error) {
-      return json({ status: "fail", error: error.message });
+      console.error(error);
+      return json({ status: "failed" });
     }
-    return null;
+    return json({ status: "success" });
   }
 }
 
 export default function Menus() {
   const { menus } = useLoaderData<typeof loader>();
+
+  const actionResponse = useActionData<typeof action>();
 
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -124,7 +129,6 @@ export default function Menus() {
           </List.Item>
         ))}
       </List>
-
       <Button variant="white" color="gray" onClick={open}>
         Add menu
       </Button>
@@ -146,6 +150,7 @@ export default function Menus() {
           </Button>
         </Form>
       </Modal>
+      {actionResponse?.status === "failed" && <Text>Failed</Text>}
     </div>
   );
 }

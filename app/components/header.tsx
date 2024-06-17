@@ -1,15 +1,9 @@
 import { Button } from "@mantine/core";
 import { Form } from "@remix-run/react";
 import { Link } from "@remix-run/react";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { links } from "~/lib/links";
-import { Database } from "~/types/supabase";
 
-type Props = {
-  supabase: SupabaseClient<Database>;
-};
-
-export default function Header(props: Props) {
+export default function Header() {
   return (
     <header
       style={{

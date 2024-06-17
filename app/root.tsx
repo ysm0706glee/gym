@@ -75,7 +75,7 @@ export default function App() {
       </head>
       <body>
         <MantineProvider defaultColorScheme="dark">
-          {user.data.user && <Header supabase={supabase} />}
+          {user.data.user && <Header />}
           <main
             style={{
               height: "calc(100vh - 3rem)",
