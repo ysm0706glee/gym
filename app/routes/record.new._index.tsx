@@ -1,4 +1,9 @@
-import { useLoaderData, Form, useActionData } from "@remix-run/react";
+import {
+  useLoaderData,
+  useNavigation,
+  useActionData,
+  useSubmit,
+} from "@remix-run/react";
 import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
@@ -7,8 +12,8 @@ import {
 } from "@vercel/remix";
 import type { FormDataEntry, Records } from "~/types/workoutRecord";
 import { useDisclosure } from "@mantine/hooks";
-import { NumberInput, Button, Text, Modal, Group } from "@mantine/core";
-import { FormEvent, useRef, useState } from "react";
+import { NumberInput, Button, Text, Modal, Group, Loader } from "@mantine/core";
+import { useEffect, useState } from "react";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { parseFormData } from "~/lib/records";
 import { formateDate } from "~/lib/date";
@@ -100,14 +105,20 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function WorkoutRecord() {
-  const { menu, records } = useLoaderData<typeof loader>();
-  const actionResponse = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const submit = useSubmit();
 
-  const formRef = useRef<HTMLFormElement>(null);
+  const { menu, records } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
   const [recordsState, setRecordsState] = useState(records);
 
   const [opened, { open, close }] = useDisclosure(false);
+
+  const isLoaderSubmission = navigation.state === "loading";
+  const isLoaderSubmissionRedirect = navigation.state === "loading";
+  const isLoading = isLoaderSubmission || isLoaderSubmissionRedirect;
+  const isActionSubmission = navigation.state === "submitting";
 
   const addRecord = (exerciseName: string) => {
     const currentRecords = recordsState[exerciseName];
@@ -164,102 +175,132 @@ export default function WorkoutRecord() {
     });
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (formRef.current) {
-      formRef.current.submit();
+  const onPost = () => {
+    const formData = new FormData();
+    Object.entries(recordsState).forEach(([exerciseName, { id, records }]) => {
+      records.forEach((record, index) => {
+        formData.append(`${id}-${index + 1}-reps`, record.reps.toString());
+        formData.append(`${id}-${index + 1}-weight`, record.weight.toString());
+      });
+    });
+    submit(formData, { method: "post" });
+  };
+
+  useEffect(() => {
+    if (actionData?.status === "success") {
       close();
     }
-  };
+  }, [actionData, close]);
 
   return (
     <div>
-      {actionResponse?.status === "success" ? (
-        <Text size="lg">Good job!</Text>
+      {isLoading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <Loader color="gray" />
+        </div>
       ) : (
         <>
-          <Text size="lg">{menu?.name}</Text>
-          <Text size="sm">{menu?.memo}</Text>
-          <Form method="post" ref={formRef}>
-            {Object.entries(recordsState).map(
-              ([exerciseName, { id, memo, records }]) => (
-                <div
-                  key={id}
-                  style={{
-                    marginBottom: "2rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                  }}
-                >
-                  <Text size="lg">{exerciseName}</Text>
-                  {memo ?? <Text size="sm">{memo}</Text>}
-                  {records.map((record, index) => (
+          {actionData?.status === "success" ? (
+            <Text size="lg">Good job!</Text>
+          ) : (
+            <>
+              <Text size="lg">{menu?.name}</Text>
+              <Text size="sm">{menu?.memo}</Text>
+              <form method="post">
+                {Object.entries(recordsState).map(
+                  ([exerciseName, { id, memo, records }]) => (
                     <div
-                      key={`${record.id}-${index}`}
+                      key={id}
                       style={{
+                        marginBottom: "2rem",
                         display: "flex",
                         flexDirection: "column",
                         gap: "1rem",
                       }}
                     >
-                      {index !== 0 && (
-                        <Group>
-                          <Text>{index + 1} sets</Text>
-                          <Button
-                            variant="transparent"
-                            color="red"
-                            onClick={() => deleteRecord(exerciseName, index)}
-                          >
-                            ×
-                          </Button>
-                        </Group>
-                      )}
-                      <NumberInput
-                        name={`${id}-${index + 1}-reps`}
-                        label="Reps"
-                        value={record.reps}
-                        onChange={(value) =>
-                          updateRecord(exerciseName, index, "reps", value)
-                        }
-                      />
-                      <NumberInput
-                        name={`${id}-${index + 1}-weight`}
-                        label="Weight(kg)"
-                        value={record.weight}
-                        onChange={(value) =>
-                          updateRecord(exerciseName, index, "weight", value)
-                        }
-                      />
+                      <Text size="lg">{exerciseName}</Text>
+                      {memo && <Text size="sm">{memo}</Text>}
+                      {records.map((record, index) => (
+                        <div
+                          key={`${record.id}-${index}`}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "1rem",
+                          }}
+                        >
+                          {index !== 0 && (
+                            <Group>
+                              <Text>{index + 1} sets</Text>
+                              <Button
+                                variant="transparent"
+                                color="red"
+                                onClick={() =>
+                                  deleteRecord(exerciseName, index)
+                                }
+                              >
+                                ×
+                              </Button>
+                            </Group>
+                          )}
+                          <NumberInput
+                            name={`${id}-${index + 1}-reps`}
+                            label="Reps"
+                            value={record.reps}
+                            onChange={(value) =>
+                              updateRecord(exerciseName, index, "reps", value)
+                            }
+                          />
+                          <NumberInput
+                            name={`${id}-${index + 1}-weight`}
+                            label="Weight(kg)"
+                            value={record.weight}
+                            onChange={(value) =>
+                              updateRecord(exerciseName, index, "weight", value)
+                            }
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="filled"
+                        color="gray"
+                        onClick={() => addRecord(exerciseName)}
+                      >
+                        Add Record
+                      </Button>
                     </div>
-                  ))}
-                  <Button
-                    variant="filled"
-                    color="gray"
-                    onClick={() => addRecord(exerciseName)}
-                  >
-                    Add Record
+                  )
+                )}
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <Button variant="white" color="gray" onClick={open}>
+                    Save
                   </Button>
                 </div>
-              )
-            )}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <Button variant="white" color="gray" onClick={open}>
-                Save
-              </Button>
-            </div>
-            <Modal
-              opened={opened}
-              onClose={close}
-              title="Are you sure you want to submit these records?"
-            >
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <Button variant="white" color="gray" onClick={handleSubmit}>
-                  Yes
-                </Button>
-              </div>
-            </Modal>
-          </Form>
+                <Modal
+                  opened={opened}
+                  onClose={close}
+                  title="Are you sure you want to submit these records?"
+                >
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <Button
+                      variant="white"
+                      color="gray"
+                      onClick={onPost}
+                      disabled={isActionSubmission}
+                    >
+                      Yes
+                    </Button>
+                  </div>
+                </Modal>
+              </form>
+            </>
+          )}
         </>
       )}
     </div>

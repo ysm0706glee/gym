@@ -8,6 +8,7 @@ import {
   Textarea,
   Title,
   Group,
+  Loader,
 } from "@mantine/core";
 import {
   type LoaderFunctionArgs,
@@ -15,7 +16,12 @@ import {
   ActionFunctionArgs,
   json,
 } from "@vercel/remix";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
 import { z } from "zod";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { links } from "~/lib/links";
@@ -114,10 +120,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
 }
 
 export default function Menu() {
+  const navigation = useNavigation();
+
   const { menu, exercises } = useLoaderData<typeof loader>();
   const actionResponse = useActionData<typeof action>();
 
   const [opened, { open, close }] = useDisclosure(false);
+
+  const isLoaderSubmission = navigation.state === "loading";
+  const isLoaderSubmissionRedirect = navigation.state === "loading";
+  const isLoading = isLoaderSubmission || isLoaderSubmissionRedirect;
+  const isActionSubmission = navigation.state === "submitting";
 
   useEffect(() => {
     if (actionResponse?.status === "success") {
@@ -127,72 +140,91 @@ export default function Menu() {
 
   return (
     <div>
-      <Title order={1}>{menu?.name}</Title>
-      <Text size="sm" style={{ wordBreak: "break-all" }}>
-        {menu?.memo}
-      </Text>
-      <List
-        style={{
-          paddingBottom: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
-      >
-        {exercises?.map((exercise) => (
-          <List.Item key={exercise.exercises?.id}>
-            <Form method="post">
-              <Group justify="space-between">
-                <Text>{exercise.exercises?.name}</Text>
-                <input
-                  type="hidden"
-                  name="exercisesId"
-                  value={exercise.exercises?.id}
-                />
-                <Button
-                  type="submit"
-                  name="_action"
-                  value="delete"
-                  variant="transparent"
-                  color="red"
-                >
-                  ×
-                </Button>
-              </Group>
-            </Form>
-            <Text size="sm" style={{ wordBreak: "break-all" }}>
-              {exercise.exercises?.memo}
-            </Text>
-          </List.Item>
-        ))}
-      </List>
-      <Button variant="white" color="gray" onClick={open}>
-        Add exercise
-      </Button>
-      <Modal opened={opened} onClose={close}>
-        <Form
-          method="post"
-          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      {isLoading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "1rem",
+          }}
         >
-          <TextInput
-            name="exercise"
-            label="exercise name"
-            withAsterisk
-            required
-          />
-          <Textarea name="memo" label="memo" />
-          <Button
-            type="submit"
-            name="_action"
-            value="create"
-            variant="white"
-            color="gray"
-          >
-            Add
+          <Loader color="gray" />
+        </div>
+      ) : (
+        <>
+          <Title order={1}>{menu?.name}</Title>
+          <Text size="sm" style={{ wordBreak: "break-all" }}>
+            {menu?.memo}
+          </Text>
+          {!exercises || exercises.length === 0 ? (
+            <Text>No exercises</Text>
+          ) : (
+            <List
+              style={{
+                paddingBottom: "1rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              {exercises?.map((exercise) => (
+                <List.Item key={exercise.exercises?.id}>
+                  <Form method="post">
+                    <Group justify="space-between">
+                      <Text>{exercise.exercises?.name}</Text>
+                      <input
+                        type="hidden"
+                        name="exercisesId"
+                        value={exercise.exercises?.id}
+                      />
+                      <Button
+                        type="submit"
+                        name="_action"
+                        value="delete"
+                        variant="transparent"
+                        color="red"
+                      >
+                        ×
+                      </Button>
+                    </Group>
+                  </Form>
+                  <Text size="sm" style={{ wordBreak: "break-all" }}>
+                    {exercise.exercises?.memo}
+                  </Text>
+                </List.Item>
+              ))}
+            </List>
+          )}
+          <Button variant="white" color="gray" onClick={open}>
+            Add exercise
           </Button>
-        </Form>
-      </Modal>
-      {actionResponse?.status === "failed" && <Text>Failed</Text>}
+          <Modal opened={opened} onClose={close}>
+            <Form
+              method="post"
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <TextInput
+                name="exercise"
+                label="exercise name"
+                withAsterisk
+                required
+              />
+              <Textarea name="memo" label="memo" />
+              <Button
+                type="submit"
+                name="_action"
+                value="create"
+                variant="white"
+                color="gray"
+                disabled={isActionSubmission}
+              >
+                Add
+              </Button>
+            </Form>
+          </Modal>
+          {actionResponse?.status === "failed" && <Text>Failed</Text>}
+        </>
+      )}
     </div>
   );
 }

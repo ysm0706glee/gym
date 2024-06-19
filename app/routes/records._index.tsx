@@ -1,6 +1,6 @@
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigation } from "@remix-run/react";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
-import { List, Text } from "@mantine/core";
+import { List, Loader, Text } from "@mantine/core";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
 import { formateRecords } from "~/lib/records";
 import { links } from "~/lib/links";
@@ -23,23 +23,45 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function Records() {
+  const navigation = useNavigation();
+
   const { menu, records } = useLoaderData<typeof loader>();
+
+  const isLoaderSubmission = navigation.state === "loading";
+  const isLoaderSubmissionRedirect = navigation.state === "loading";
+  const isLoading = isLoaderSubmission || isLoaderSubmissionRedirect;
 
   return (
     <div>
-      <Text>{menu}</Text>
-      <List style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {Object.entries(records).map(([name, { id, records }]) => (
-          <List.Item key={id}>
-            {name}
-            {records.map((record) => (
-              <div key={record.id}>
-                {record.sets}x{record.reps} {record.weight}kg
-              </div>
+      {isLoading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <Loader color="gray" />
+        </div>
+      ) : (
+        <>
+          <Text>{menu}</Text>
+          <List
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            {Object.entries(records).map(([name, { id, records }]) => (
+              <List.Item key={id}>
+                {name}
+                {records.map((record) => (
+                  <div key={record.id}>
+                    {record.sets}x{record.reps} {record.weight}kg
+                  </div>
+                ))}
+              </List.Item>
             ))}
-          </List.Item>
-        ))}
-      </List>
+          </List>
+        </>
+      )}
     </div>
   );
 }

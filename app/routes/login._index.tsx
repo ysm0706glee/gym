@@ -1,5 +1,5 @@
-import { Button, PasswordInput, Text, TextInput } from "@mantine/core";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { Button, Loader, PasswordInput, Text, TextInput } from "@mantine/core";
+import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import {
   type LoaderFunctionArgs,
   redirect,
@@ -58,53 +58,73 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Login() {
+  const navigation = useNavigation();
+
   const actionResponse = useActionData<typeof action>();
+
+  const isLoaderSubmission = navigation.state === "loading";
+  const isLoaderSubmissionRedirect = navigation.state === "loading";
+  const isLoading = isLoaderSubmission || isLoaderSubmissionRedirect;
 
   return (
     <div style={{ paddingTop: "1rem" }}>
-      <Form method="post">
-        <Button
-          style={{ width: "100%" }}
-          type="submit"
-          name="_action"
-          value="login-with-google"
-          variant="white"
-          color="gray"
+      {isLoading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "1rem",
+          }}
         >
-          Login with Google
-        </Button>
-      </Form>
-      <Text style={{ margin: "1rem 0" }}>or</Text>
-      <Form
-        method="post"
-        style={{
-          marginBottom: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
-      >
-        <TextInput
-          withAsterisk
-          label="Email"
-          placeholder="your@email.com"
-          name="email"
-        />
-        <PasswordInput label="password" name="password" />
-        <Button
-          type="submit"
-          name="_action"
-          value="login-with-password"
-          variant="white"
-          color="gray"
-        >
-          Login
-        </Button>
-      </Form>
-      <Link style={{ color: "#fff" }} to={links.signUp}>
-        Sign Up
-      </Link>
-      {actionResponse?.error && <Text>Login failed</Text>}
+          <Loader color="gray" />
+        </div>
+      ) : (
+        <>
+          <Form method="post">
+            <Button
+              style={{ width: "100%" }}
+              type="submit"
+              name="_action"
+              value="login-with-google"
+              variant="white"
+              color="gray"
+            >
+              Login with Google
+            </Button>
+          </Form>
+          <Text style={{ margin: "1rem 0" }}>or</Text>
+          <Form
+            method="post"
+            style={{
+              marginBottom: "1rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+            }}
+          >
+            <TextInput
+              withAsterisk
+              label="Email"
+              placeholder="your@email.com"
+              name="email"
+            />
+            <PasswordInput label="password" name="password" />
+            <Button
+              type="submit"
+              name="_action"
+              value="login-with-password"
+              variant="white"
+              color="gray"
+            >
+              Login
+            </Button>
+          </Form>
+          <Link style={{ color: "#fff" }} to={links.signUp}>
+            Sign Up
+          </Link>
+          {actionResponse?.error && <Text>Login failed</Text>}
+        </>
+      )}
     </div>
   );
 }

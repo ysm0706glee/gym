@@ -7,8 +7,15 @@ import {
   Textarea,
   Modal,
   Group,
+  Loader,
 } from "@mantine/core";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import {
+  Form,
+  Link,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
 import {
   LoaderFunctionArgs,
   ActionFunctionArgs,
@@ -18,6 +25,7 @@ import {
 import { z } from "zod";
 import { links } from "~/lib/links";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
+import { useEffect } from "react";
 
 const createSchema = z.object({
   menu: z.string().min(1),
@@ -59,12 +67,12 @@ export async function action({ request }: ActionFunctionArgs) {
     if (memo) {
       insertData.memo = memo;
     }
-    const { data, error } = await supabaseClient
+    const { error } = await supabaseClient
       .from("menus")
       .insert(insertData)
       .select();
     if (error) throw new Error(error.message);
-    return redirect(`${links.menus}/${data[0].id}`);
+    return json({ status: "success" });
   }
   if (_action === "delete") {
     const parsed = deleteSchema.safeParse(value);
@@ -85,72 +93,109 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Menus() {
+  const navigation = useNavigation();
+
   const { menus } = useLoaderData<typeof loader>();
 
   const actionResponse = useActionData<typeof action>();
 
   const [opened, { open, close }] = useDisclosure(false);
 
+  const isLoaderSubmission = navigation.state === "loading";
+  const isLoaderSubmissionRedirect = navigation.state === "loading";
+  const isLoading = isLoaderSubmission || isLoaderSubmissionRedirect;
+  const isActionSubmission = navigation.state === "submitting";
+
+  useEffect(() => {
+    if (actionResponse?.status === "success") {
+      close();
+    }
+  }, [actionResponse, close]);
+
   return (
     <div>
-      <Text style={{ paddingBottom: "1rem" }} size="lg">
-        Workout Menus
-      </Text>
-      <List
-        style={{
-          paddingBottom: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
-      >
-        {menus?.map((menu) => (
-          <List.Item key={menu.id}>
-            <Group justify="space-between">
-              <Link style={{ color: "#fff" }} to={`${links.menus}/${menu.id}`}>
-                <Text>{menu.name}</Text>
-                <Text size="sm" style={{ wordBreak: "break-all" }}>
-                  {menu.memo}
-                </Text>
-              </Link>
-              <Form method="post">
-                <input type="hidden" name="menuId" value={menu.id} />
-                <Button
-                  type="submit"
-                  name="_action"
-                  value="delete"
-                  variant="transparent"
-                  color="red"
-                >
-                  ×
-                </Button>
-              </Form>
-            </Group>
-          </List.Item>
-        ))}
-      </List>
-      <Button variant="white" color="gray" onClick={open}>
-        Add menu
-      </Button>
-      <Modal opened={opened} onClose={close}>
-        <Form
-          method="post"
-          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      {isLoading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "1rem",
+          }}
         >
-          <TextInput name="menu" label="menu name" withAsterisk required />
-          <Textarea name="memo" label="memo" />
-          <Button
-            type="submit"
-            name="_action"
-            value="create"
-            variant="white"
-            color="gray"
-          >
-            Add
+          <Loader color="gray" />
+        </div>
+      ) : (
+        <>
+          <Text style={{ paddingBottom: "1rem" }} size="lg">
+            Workout Menus
+          </Text>
+          {!menus || menus.length === 0 ? (
+            <Text>No menus</Text>
+          ) : (
+            <List
+              style={{
+                paddingBottom: "1rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              {menus.map((menu) => (
+                <List.Item key={menu.id}>
+                  <Group justify="space-between">
+                    <Link
+                      style={{ color: "#fff" }}
+                      to={`${links.menus}/${menu.id}`}
+                    >
+                      <Text>{menu.name}</Text>
+                      <Text size="sm" style={{ wordBreak: "break-all" }}>
+                        {menu.memo}
+                      </Text>
+                    </Link>
+                    {/* TODO: modal */}
+                    <Form method="post">
+                      <input type="hidden" name="menuId" value={menu.id} />
+                      <Button
+                        type="submit"
+                        name="_action"
+                        value="delete"
+                        variant="transparent"
+                        color="red"
+                        disabled={isActionSubmission}
+                      >
+                        ×
+                      </Button>
+                    </Form>
+                  </Group>
+                </List.Item>
+              ))}
+            </List>
+          )}
+          <Button variant="white" color="gray" onClick={open}>
+            Add menu
           </Button>
-        </Form>
-      </Modal>
-      {actionResponse?.status === "failed" && <Text>Failed</Text>}
+          <Modal opened={opened} onClose={close}>
+            <Form
+              method="post"
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <TextInput name="menu" label="menu name" withAsterisk required />
+              <Textarea name="memo" label="memo" />
+              <Button
+                type="submit"
+                name="_action"
+                value="create"
+                variant="white"
+                color="gray"
+                disabled={isActionSubmission}
+              >
+                Add
+              </Button>
+            </Form>
+          </Modal>
+          {actionResponse?.status === "failed" && <Text>Failed</Text>}
+        </>
+      )}
     </div>
   );
 }

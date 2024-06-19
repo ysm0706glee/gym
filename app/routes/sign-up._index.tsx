@@ -1,5 +1,5 @@
-import { Button, PasswordInput, TextInput } from "@mantine/core";
-import { Form, useActionData } from "@remix-run/react";
+import { Button, Loader, PasswordInput, TextInput } from "@mantine/core";
+import { Form, useActionData, useNavigation } from "@remix-run/react";
 import {
   type LoaderFunctionArgs,
   redirect,
@@ -38,33 +38,53 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function SignUp() {
+  const navigation = useNavigation();
+
   const actionResponse = useActionData<typeof action>();
+
+  const isLoaderSubmission = navigation.state === "loading";
+  const isLoaderSubmissionRedirect = navigation.state === "loading";
+  const isLoading = isLoaderSubmission || isLoaderSubmissionRedirect;
 
   return (
     <div style={{ paddingTop: "1rem" }}>
-      {!actionResponse?.success ? (
-        <Form
-          method="post"
+      {isLoading ? (
+        <div
           style={{
-            marginBottom: "1rem",
             display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
+            justifyContent: "center",
+            marginTop: "1rem",
           }}
         >
-          <TextInput
-            withAsterisk
-            label="Email"
-            placeholder="your@email.com"
-            name="email"
-          />
-          <PasswordInput label="password" name="password" />
-          <Button type="submit" variant="white" color="gray">
-            Sign Up
-          </Button>
-        </Form>
+          <Loader color="gray" />
+        </div>
       ) : (
-        <h3>Please check your email.</h3>
+        <>
+          {!actionResponse?.success ? (
+            <Form
+              method="post"
+              style={{
+                marginBottom: "1rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              <TextInput
+                withAsterisk
+                label="Email"
+                placeholder="your@email.com"
+                name="email"
+              />
+              <PasswordInput label="password" name="password" />
+              <Button type="submit" variant="white" color="gray">
+                Sign Up
+              </Button>
+            </Form>
+          ) : (
+            <h3>Please check your email.</h3>
+          )}
+        </>
       )}
     </div>
   );

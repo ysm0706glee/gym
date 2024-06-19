@@ -1,6 +1,6 @@
-import { Tabs } from "@mantine/core";
+import { Loader, Tabs } from "@mantine/core";
 import { DatePicker, type DateValue } from "@mantine/dates";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate, useNavigation } from "@remix-run/react";
 import { redirect, type LoaderFunctionArgs } from "@vercel/remix";
 import ProgressTab from "../components/progressTab";
 import { createSupabaseServerClient } from "~/lib/supabase.server";
@@ -19,7 +19,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Calendar() {
   const navigate = useNavigate();
+  const navigation = useNavigation();
+
   const { recordDates } = useLoaderData<typeof loader>();
+
+  const isLoaderSubmission = navigation.state === "loading";
+  const isLoaderSubmissionRedirect = navigation.state === "loading";
+  const isLoading = isLoaderSubmission || isLoaderSubmissionRedirect;
 
   const dayRenderer = (date: Date) => {
     const formattedDate = formateDate(date);
@@ -33,18 +39,30 @@ export default function Calendar() {
   return (
     <div>
       <ProgressTab defaultValue="calendar">
-        <Tabs.Panel value="calendar">
-          <DatePicker
-            renderDay={dayRenderer}
-            onChange={(newDate: DateValue) => {
-              if (!newDate) return;
-              const formattedDate = formateDate(newDate);
-              if (recordDates.includes(formattedDate)) {
-                navigate(`${links.records}/?date=${formattedDate}`);
-              }
+        {isLoading ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "1rem",
             }}
-          />
-        </Tabs.Panel>
+          >
+            <Loader color="gray" />
+          </div>
+        ) : (
+          <Tabs.Panel value="calendar">
+            <DatePicker
+              renderDay={dayRenderer}
+              onChange={(newDate: DateValue) => {
+                if (!newDate) return;
+                const formattedDate = formateDate(newDate);
+                if (recordDates.includes(formattedDate)) {
+                  navigate(`${links.records}/?date=${formattedDate}`);
+                }
+              }}
+            />
+          </Tabs.Panel>
+        )}
       </ProgressTab>
     </div>
   );
